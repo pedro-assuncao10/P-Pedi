@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Doce Bolaria{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <link rel="stylesheet" href="{% static 'css/base_admin.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+
+    <header class="admin-header">
+        <div class="header-left">
+            <button id="sidebarToggle" class="menu-toggle-btn">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="{% url 'pedidos:painel_kanban' %}" class="admin-logo">Painel Doce Bolaria</a>
+        </div>
+        
+        <div class="header-right">
+            <div class="user-profile-dropdown">
+                <div class="user-avatar">
+                    {{ user.get_full_name|first|default:user.email|first|upper }}
+                </div>
+                <span class="user-name">{{ user.get_full_name|default:user.email }}</span>
+                <i class='bx bx-chevron-down'></i>
+
+                <div class="dropdown-menu">
+                    <a href="#" class="dropdown-item">
+                        <i class='bx bx-user'></i> Meu Perfil
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class='bx bx-cog'></i> Configurações
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'usuarios:logout' %}" class="dropdown-item text-danger">
+                        <i class='bx bx-log-out'></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <aside class="admin-sidebar">
+        <ul class="sidebar-menu">
+            
+            <li class="menu-header">Vendas</li>
+            <li>
+                <a href="{% url 'pedidos:painel_kanban' %}" class="menu-link {% if request.resolver_match.url_name == 'painel_kanban' %}active{% endif %}">
+                    <i class='bx bx-kanban'></i>
+                    <span>Painel de Pedidos</span>
+                </a>
+            </li>
+            <li>
+                <a href="/" target="_blank" class="menu-link">
+                    <i class='bx bx-store-alt'></i>
+                    <span>Ver Loja Online</span>
+                </a>
+            </li>
+
+            <li class="menu-header">Loja</li>
+
+            <li>
+                <!-- Link para o Dashboard -->
+                <a href="{% url 'dashboard:painel_geral' %}" class="menu-link {% if request.resolver_match.url_name == 'painel_geral' %}active{% endif %}">
+                    <i class='bx bx-grid-alt'></i>
+                    <span>Visão Geral (Dashboard)</span>
+                </a>
+            </li>
+            
+            <li>
+                <!-- Link para Configurações -->
+                <a href="{% url 'empresas:configuracao_loja' %}" class="menu-link {% if request.resolver_match.url_name == 'configuracao_loja' %}active{% endif %}">
+                    <i class='bx bx-cog'></i>
+                    <span>Configurações</span>
+                </a>
+            </li>
+
+            <li class="menu-header">Catálogo</li>
+            
+            <li>
+                <!-- AQUI: O link gera /catalogo/admin/meus-produtos/ automaticamente -->
+                <a href="{% url 'catalogo:admin_produtos' %}" class="menu-link {% if request.resolver_match.url_name == 'admin_produtos' %}active{% endif %}">
+                    <i class='bx bx-list-ul'></i>
+                    <span>Meus Produtos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url 'catalogo:produto_create' %}" class="menu-link {% if request.resolver_match.url_name == 'produto_create' %}active{% endif %}">
+                    <i class='bx bx-plus-circle'></i>
+                    <span>Cadastrar Produto</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url 'catalogo:categoria_create' %}" class="menu-link {% if request.resolver_match.url_name == 'categoria_create' %}active{% endif %}">
+                    <i class='bx bx-category-alt'></i>
+                    <span>Cadastrar Categoria</span>
+                </a>
+            </li>
+
+            <li class="menu-header">Pessoas</li>
+            <li>
+                <a href="#" class="menu-link">
+                    <i class='bx bx-user-circle'></i>
+                    <span>Clientes</span>
+                </a>
+            </li>
+
+            <li class="menu-header">Parcerias</li>
+            <li>
+                <a href="{% url 'assinatura_indicacao:painel_indicacoes' %}" class="menu-link {% if request.resolver_match.url_name == 'painel_indicacoes' %}active{% endif %}">
+                    <i class='bx bx-gift'></i>
+                    <span>Indique e Ganhe</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="admin-main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        })
+
+                        Toast.fire({
+                            icon: '{{ message.tags|default:"info" }}', 
+                            title: '{{ message }}'
+                        })
+                    });
+                </script>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/base_admin.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

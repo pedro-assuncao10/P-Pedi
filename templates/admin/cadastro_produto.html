@@ -1,0 +1,221 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Editar Produto{% else %}Novo Produto{% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="color: var(--admin-secondary); margin-bottom: 5px;">
+                {% if object %}Editar Produto{% else %}Cadastrar Produto{% endif %}
+            </h2>
+            <p style="color: #666; font-size: 0.9rem;">Preencha as informações do item do cardápio.</p>
+        </div>
+        <a href="{% url 'catalogo:admin_produtos' %}" class="btn-back">
+            <i class='bx bx-arrow-back'></i> Voltar para Lista
+        </a>
+    </div>
+
+    <div class="card-form">
+        <form method="POST" enctype="multipart/form-data" id="productForm">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <i class='bx bx-error-circle'></i> 
+                    <strong>Atenção:</strong> Verifique os campos em vermelho abaixo.
+                </div>
+            {% endif %}
+
+            <div class="form-grid">
+                
+                <div class="form-group full-width">
+                    <label for="{{ form.nome.id_for_label }}">Nome do Produto *</label>
+                    {{ form.nome }}
+                    {{ form.nome.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.slug.id_for_label }}">Slug (URL Amigável)</label>
+                    {{ form.slug }}
+                    <small>Gerado automaticamente do nome.</small>
+                    {{ form.slug.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.categoria.id_for_label }}">Categoria *</label>
+                    <div style="display: flex; gap: 10px;">
+                        {{ form.categoria }}
+                        <a href="{% url 'catalogo:categoria_create' %}" class="btn-small-icon" title="Criar Nova Categoria" target="_blank">
+                            <i class='bx bx-plus'></i>
+                        </a>
+                    </div>
+                    {{ form.categoria.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.preco.id_for_label }}">Preço (R$) *</label>
+                    {{ form.preco }}
+                    {{ form.preco.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.estoque.id_for_label }}">Estoque Atual</label>
+                    {{ form.estoque }}
+                    {{ form.estoque.errors }}
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="{{ form.descricao.id_for_label }}">Descrição Detalhada</label>
+                    {{ form.descricao }}
+                    {{ form.descricao.errors }}
+                </div>
+
+                <div class="form-group full-width upload-section">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bx-images'></i> Imagens do Produto
+                    </label>
+                    
+                    <div class="upload-container">
+                        {{ form.imagens }}
+                        <div class="upload-hint">
+                            <i class='bx bx-cloud-upload'></i>
+                            <span>Clique para selecionar ou arraste arquivos aqui</span>
+                            <small>Use <strong>Ctrl</strong> para selecionar várias fotos.</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if object and object.imagens.all %}
+                <div class="form-group full-width">
+                    <label>Imagens Atuais:</label>
+                    <div class="image-gallery">
+                        {% for img in object.imagens.all %}
+                            <div class="gallery-item">
+                                <img src="{{ img.imagem.url }}" alt="Produto">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group full-width toggle-section">
+                    <label class="toggle-switch">
+                        {{ form.is_disponivel }}
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Produto disponível para venda?</span>
+                </div>
+
+            </div> <hr class="divider">
+
+            <div class="form-actions">
+                <button type="submit" class="btn-save">
+                    <i class='bx bx-save'></i> Salvar Produto
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos do Formulário */
+    .btn-back {
+        text-decoration: none; color: #666; font-weight: 500; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+    }
+    .btn-back:hover { color: var(--admin-primary); }
+
+    .card-form {
+        background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .form-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    }
+    .full-width { grid-column: span 2; }
+
+    .form-group label {
+        display: block; font-weight: 600; margin-bottom: 8px; color: var(--admin-secondary); font-size: 0.9rem;
+    }
+    
+    .form-control, select, textarea {
+        width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: 'Poppins', sans-serif; transition: 0.2s;
+    }
+    .form-control:focus { border-color: var(--admin-primary); outline: none; box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1); }
+
+    .btn-small-icon {
+        background: #f0f2f5; color: #333; width: 45px; display: flex; align-items: center; justify-content: center; border-radius: 8px; text-decoration: none; font-size: 1.2rem; border: 1px solid #e2e8f0;
+    }
+    .btn-small-icon:hover { background: var(--admin-primary); color: white; border-color: var(--admin-primary); }
+
+    /* Upload Area */
+    .upload-section .upload-container {
+        position: relative; border: 2px dashed #cbd5e0; border-radius: 10px; padding: 20px; text-align: center; background: #f8fafc; transition: 0.2s;
+    }
+    .upload-container:hover { border-color: var(--admin-primary); background: #fff5f8; }
+    
+    /* Esconde o input file padrão feio e deixa ele clicar na área toda */
+    .upload-container input[type="file"] {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;
+    }
+    
+    .upload-hint { pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 5px; color: #64748b; }
+    .upload-hint i { font-size: 2rem; color: var(--admin-primary); }
+
+    /* Galeria de Edição */
+    .image-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .gallery-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
+
+    /* Toggle Switch */
+    .toggle-section { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #0be881; }
+    input:checked + .slider:before { transform: translateX(24px); }
+    .toggle-label { font-weight: 500; color: #333; cursor: pointer; }
+
+    /* Botão Salvar */
+    .divider { border: 0; border-top: 1px solid #edf2f7; margin: 30px 0; }
+    .btn-save {
+        background-color: var(--admin-primary); color: white; border: none; padding: 12px 40px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; transition: 0.2s;
+    }
+    .btn-save:hover { background-color: #d81b60; box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3); }
+    .alert-error { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #fecaca; display: flex; align-items: center; gap: 10px; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Script para gerar Slug automaticamente
+    const nameInput = document.getElementById('{{ form.nome.id_for_label }}');
+    const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+
+    if(nameInput && slugInput) {
+        nameInput.addEventListener('keyup', function() {
+            // Se estiver criando (slug vazio), preenche auto. Se editando, não mexe.
+            if (!slugInput.value || slugInput.value === slugify(this.value.slice(0, -1))) {
+                slugInput.value = slugify(this.value);
+            }
+        });
+    }
+
+    function slugify(text) {
+        return text.toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+            .replace(/\s+/g, '-')           // Espaços para hifens
+            .replace(/[^\w\-]+/g, '')       // Remove caracteres não alfanuméricos
+            .replace(/\-\-+/g, '-')         // Remove hifens duplicados
+            .replace(/^-+/, '')             // Remove hifens do começo
+            .replace(/-+$/, '');            // Remove hifens do fim
+    }
+</script>
+{% endblock %}

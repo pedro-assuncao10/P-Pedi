@@ -1,0 +1,176 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Indique e Ganhe{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos desta página */
+    .referral-hero {
+        background: linear-gradient(135deg, var(--admin-primary) 0%, #ff6b81 100%);
+        border-radius: 12px;
+        padding: 30px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 20px rgba(233, 30, 99, 0.2);
+    }
+
+    .hero-content h2 { margin-bottom: 10px; font-size: 1.8rem; }
+    .hero-content p { font-size: 1rem; opacity: 0.9; max-width: 600px; }
+
+    /* Caixa do Código */
+    .code-box {
+        background: rgba(255,255,255,0.2);
+        padding: 15px 25px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .code-text { font-size: 1.5rem; font-weight: 700; letter-spacing: 2px; font-family: monospace; }
+    
+    .btn-copy {
+        background: white; color: var(--admin-primary); border: none; padding: 8px 15px;
+        border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;
+    }
+    .btn-copy:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+    /* KPIs */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--admin-secondary); }
+    .stat-label { color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Tabela de Indicações */
+    .table-responsive { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .table-header { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .table-header h3 { color: var(--admin-secondary); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 15px; color: #888; font-weight: 600; font-size: 0.9rem; }
+    td { padding: 15px; border-bottom: 1px solid #eee; color: #555; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Status Badges */
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-pendente { background: #fff3cd; color: #856404; }
+    .badge-aprovado { background: #d4edda; color: #155724; }
+    .badge-cancelado { background: #f8d7da; color: #721c24; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section com o Código -->
+<div class="referral-hero">
+    <div class="hero-content">
+        <h2>Indique e Ganhe! 🚀</h2>
+        <p>
+            Compartilhe seu código com amigos. Quando eles assinarem a plataforma, 
+            você ganha <strong>{{ tipo_beneficio }}</strong> como recompensa!
+        </p>
+    </div>
+    
+    <div class="code-box">
+        <span class="code-text" id="myCode">{{ codigo }}</span>
+        <button class="btn-copy" onclick="copiarCodigo()">
+            <i class='bx bx-copy'></i> Copiar
+        </button>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_indicados }}</div>
+        <div class="stat-label">Total Indicados</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_convertidos }}</div>
+        <div class="stat-label">Convertidos (Pagos)</div>
+    </div>
+    <div class="stat-card">
+        <!-- Exemplo simples de cálculo visual -->
+        <div class="stat-value" style="color: #0be881;">{{ total_convertidos }}</div>
+        <div class="stat-label">Recompensas Ganhas</div>
+    </div>
+</div>
+
+<!-- Tabela de Histórico -->
+<div class="table-responsive">
+    <div class="table-header">
+        <h3>Histórico de Indicações</h3>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Indicado (E-mail)</th>
+                <th>Status</th>
+                <th>Benefício</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for indicacao in indicacoes %}
+            <tr>
+                <td>{{ indicacao.data_indicacao|date:"d/m/Y H:i" }}</td>
+                <td>{{ indicacao.indicado.email }}</td>
+                <td>
+                    <span class="badge badge-{{ indicacao.status|lower }}">
+                        {{ indicacao.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if indicacao.status == 'APROVADO' %}
+                        <span style="color: #0be881; font-weight: 600;">Liberado</span>
+                    {% else %}
+                        <span style="color: #ccc;">Aguardando</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 40px; color: #999;">
+                    <i class='bx bx-share-alt' style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <p>Você ainda não indicou ninguém. Comece agora!</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copiarCodigo() {
+        const codigo = document.getElementById('myCode').innerText;
+        
+        // Cria elemento temporário para copiar
+        const el = document.createElement('textarea');
+        el.value = codigo;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+
+        // Feedback visual (SweetAlert2)
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Código copiado!',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Pedido #{{ pedido.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        /* Layout Principal */
+        .container {
+            width: 100%;
+        }
+
+        /* Cabeçalho */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; font-weight: bold; }
+        .header p { margin: 2px 0; font-size: 10px; color: #555; }
+
+        /* Título do Pedido */
+        .order-title-box {
+            background-color: #f0f0f0;
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+        .order-title { font-size: 14px; font-weight: bold; margin: 0; }
+        .order-date { font-size: 10px; color: #666; margin-top: 2px; }
+
+        /* Seções */
+        .section-box {
+            margin-bottom: 15px;
+        }
+        .section-header {
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        /* Tabelas (usadas para layout seguro no PDF) */
+        .info-table { width: 100%; margin-bottom: 5px; }
+        .info-table td { vertical-align: top; padding: 2px 0; }
+        .label { font-weight: bold; color: #666; width: 120px; } /* Largura fixa para rótulos */
+
+        /* Tabela de Itens */
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .items-table th { 
+            text-align: left; 
+            border-bottom: 1px solid #333; 
+            padding: 6px 4px; 
+            font-size: 10px; 
+            background-color: #f9f9f9;
+        }
+        .items-table td { 
+            padding: 6px 4px; 
+            border-bottom: 1px solid #eee; 
+            vertical-align: top;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        /* Totais e Pagamento */
+        .payment-box {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        
+        .total-row {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 10px;
+            color: #333;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .status-badge {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Estilo para a observação do item */
+        .item-obs {
+            display: block;
+            margin-top: 3px;
+            font-size: 10px;
+            color: #555;
+            font-style: italic;
+            background-color: #fff9c4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px dashed #ccc;
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. CABEÇALHO DA LOJA -->
+    <div class="header">
+        <h1>{{ empresa.nome_fantasia|default:"Minha Loja" }}</h1>
+        {% if empresa.endereco %}<p>{{ empresa.endereco }}</p>{% endif %}
+        {% if empresa.cnpj or empresa.telefone_comercial %}
+            <p>
+                {% if empresa.cnpj %}CNPJ: {{ empresa.cnpj }} &nbsp;|&nbsp; {% endif %}
+                {% if empresa.telefone_comercial %}Tel: {{ empresa.telefone_comercial }}{% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- 2. NÚMERO DO PEDIDO E DATA -->
+    <div class="order-title-box">
+        <div class="order-title">PEDIDO #{{ pedido.id }}</div>
+        <div class="order-date">{{ pedido.criado_em|date:"d/m/Y" }} às {{ pedido.criado_em|date:"H:i" }}</div>
+    </div>
+
+    <!-- 3. DADOS DO CLIENTE -->
+    <div class="section-box">
+        <div class="section-header">Dados do Cliente</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Nome:</td>
+                <td>{{ pedido.cliente.nome_completo|default:pedido.cliente.usuario.get_full_name }}</td>
+            </tr>
+            {% if pedido.cliente.telefone %}
+            <tr>
+                <td class="label">Telefone:</td>
+                <td>{{ pedido.cliente.telefone }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">Endereço:</td>
+                <td>
+                    {% if pedido.endereco_entrega %}
+                        {{ pedido.endereco_entrega.logradouro }}, {{ pedido.endereco_entrega.numero }}
+                        <br>
+                        {{ pedido.endereco_entrega.bairro }} - {{ pedido.endereco_entrega.cidade }}/{{ pedido.endereco_entrega.estado }}
+                        {% if pedido.endereco_entrega.complemento %}
+                            <br>Compl: {{ pedido.endereco_entrega.complemento }}
+                        {% endif %}
+                        {% if pedido.endereco_entrega.referencia %}
+                            <br><small>(Ref: {{ pedido.endereco_entrega.referencia }})</small>
+                        {% endif %}
+                    {% else %}
+                        Retirada na Loja (Balcão)
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 4. ITENS DO PEDIDO -->
+    <div class="section-box">
+        <div class="section-header">Itens do Pedido</div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="10%" class="text-center">QTD</th>
+                    <th width="55%">PRODUTO</th>
+                    <th width="15%" class="text-right">UNIT.</th>
+                    <th width="20%" class="text-right">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pedido.itens.all %}
+                <tr>
+                    <td class="text-center">{{ item.quantidade }}x</td>
+                    <td>
+                        {{ item.produto.nome }}
+                        <!-- OBSERVAÇÃO DO ITEM AQUI -->
+                        {% if item.observacao %}
+                            <span class="item-obs">Obs: {{ item.observacao }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                    <td class="text-right">R$ {{ item.get_custo_total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- O BLOCO 5 (OBSERVAÇÕES GERAIS) FOI REMOVIDO -->
+
+    <!-- 6. PAGAMENTO E TOTAL -->
+    <div class="section-box payment-box">
+        <div class="section-header">Informações de Pagamento</div>
+        
+        <table class="info-table">
+            <tr>
+                <td class="label">Forma de Pagto:</td>
+                <td>{{ pedido.get_metodo_pagamento_display }}</td>
+            </tr>
+
+            <!-- LÓGICA DE TROCO (DINHEIRO) -->
+            {% if pedido.metodo_pagamento == 'money' and pedido.troco_para %}
+                <tr>
+                    <td class="label">Troco para:</td>
+                    <td>R$ {{ pedido.troco_para|floatformat:2 }}</td>
+                </tr>
+                <!-- Cálculo do Troco (Lógica no Template) -->
+                <tr>
+                    <td class="label" style="color: #d32f2f;">Levar Troco:</td>
+                    <td style="font-weight: bold; color: #d32f2f;">
+                        {% widthratio pedido.valor_total 1 -1 as negativo %}
+                        R$ {{ pedido.troco_para|add:negativo|floatformat:2 }}
+                    </td>
+                </tr>
+            {% endif %}
+
+            <!-- LÓGICA DE BANDEIRA (CARTÃO) -->
+            {% if pedido.metodo_pagamento == 'credit' or pedido.metodo_pagamento == 'debit' %}
+                {% if pedido.bandeira_cartao %}
+                <tr>
+                    <td class="label">Bandeira:</td>
+                    <td>{{ pedido.bandeira_cartao|upper }}</td>
+                </tr>
+                {% endif %}
+            {% endif %}
+
+            <tr>
+                <td class="label">Status Atual:</td>
+                <td class="status-badge">{{ pedido.get_status_display }}</td>
+            </tr>
+        </table>
+
+        <!-- TOTAL -->
+        <div class="total-row">
+            TOTAL A PAGAR: R$ {{ pedido.valor_total|floatformat:2 }}
+        </div>
+    </div>
+
+    <!-- Rodapé Simples -->
+    <div style="text-align: center; margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 10px; color: #888;">
+        Obrigado pela preferência!
+    </div>
+
+</body>
+</html>

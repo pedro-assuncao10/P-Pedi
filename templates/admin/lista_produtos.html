@@ -1,0 +1,118 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Meus Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    
+    .btn-add { 
+        background-color: var(--admin-primary); color: white; padding: 10px 20px; 
+        border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 500; 
+    }
+    .btn-add:hover { background-color: #d81b60; }
+    
+    .table-container { 
+        background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; 
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th { 
+        background: #f8f9fa; padding: 15px; text-align: left; font-weight: 600; 
+        color: var(--admin-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;
+    }
+    td { padding: 15px; border-bottom: 1px solid #eee; color: #555; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: #fafafa; }
+    
+    .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; background: #eee; border: 1px solid #eee; }
+    
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-success { background: #e8f5e9; color: #2e7d32; }
+    .badge-secondary { background: #f5f5f5; color: #666; }
+    
+    .actions { display: flex; gap: 8px; }
+    .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; text-decoration: none; transition: 0.2s; }
+    .btn-edit { background: #e3f2fd; color: #1976d2; }
+    .btn-edit:hover { background-color: #2196f3; color: white; }
+    .btn-delete { background: #ffebee; color: #c62828; }
+    .btn-delete:hover { background-color: #f44336; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 style="color: var(--admin-secondary); margin-bottom: 5px;">Meus Produtos</h2>
+        <p style="color: #666; font-size: 0.9rem;">Gerencie o catálogo da sua loja</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'catalogo:categoria_create' %}" class="btn-add" style="background-color: #344767;">
+            <i class='bx bx-category'></i> Nova Categoria
+        </a>
+        <a href="{% url 'catalogo:produto_create' %}" class="btn-add">
+            <i class='bx bx-plus'></i> Novo Produto
+        </a>
+    </div>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th width="80">Imagem</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Status</th>
+                <th width="100">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+            <tr>
+                <td>
+                    {% if produto.imagem_principal_url %}
+                        <img src="{{ produto.imagem_principal_url }}" class="product-thumb">
+                    {% else %}
+                        <div class="product-thumb" style="display:flex;align-items:center;justify-content:center;">
+                            <i class='bx bx-image' style="color:#ccc; font-size: 1.2rem;"></i>
+                        </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong style="color: #333;">{{ produto.nome }}</strong>
+                </td>
+                <td>{{ produto.categoria.nome|default:"-" }}</td>
+                <td style="color: #e91e63; font-weight: 600;">R$ {{ produto.preco|floatformat:2 }}</td>
+                <td>
+                    {% if produto.is_disponivel %}
+                        <span class="badge badge-success">Ativo</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'catalogo:produto_update' produto.id %}" class="btn-icon btn-edit" title="Editar">
+                            <i class='bx bx-pencil'></i>
+                        </a>
+                        <a href="{% url 'catalogo:produto_delete' produto.id %}" class="btn-icon btn-delete" title="Excluir">
+                            <i class='bx bx-trash'></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 50px;">
+                    <i class='bx bx-package' style="font-size: 3rem; color: #eee; margin-bottom: 10px;"></i>
+                    <p style="color: #888;">Nenhum produto cadastrado.</p>
+                    <a href="{% url 'catalogo:produto_create' %}" style="color: var(--admin-primary); font-weight: 600; text-decoration: none;">Cadastrar o primeiro</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

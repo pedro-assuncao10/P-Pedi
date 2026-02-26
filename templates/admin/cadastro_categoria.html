@@ -1,0 +1,97 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Editar Categoria{% else %}Nova Categoria{% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: var(--admin-secondary);">
+            {% if object %}Editar Categoria{% else %}Nova Categoria{% endif %}
+        </h2>
+        <a href="{% url 'catalogo:admin_produtos' %}" style="text-decoration: none; color: #666; display: flex; align-items: center; gap: 5px;">
+            <i class='bx bx-x'></i> Cancelar
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                    Verifique os erros abaixo.
+                </div>
+            {% endif %}
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <div>
+                    <label for="{{ form.nome.id_for_label }}" style="font-weight: 600; display: block; margin-bottom: 5px;">Nome da Categoria</label>
+                    {{ form.nome }}
+                    {{ form.nome.errors }}
+                </div>
+
+                <div>
+                    <label for="{{ form.slug.id_for_label }}" style="font-weight: 600; display: block; margin-bottom: 5px;">Slug (URL)</label>
+                    {{ form.slug }}
+                    <small style="color: #888; font-size: 0.8rem;">Deixe vazio para gerar automaticamente.</small>
+                    {{ form.slug.errors }}
+                </div>
+
+                <div>
+                    <label for="{{ form.categoria_pai.id_for_label }}" style="font-weight: 600; display: block; margin-bottom: 5px;">Categoria Pai (Opcional)</label>
+                    {{ form.categoria_pai }}
+                    <small style="color: #888;">Selecione apenas se for uma subcategoria.</small>
+                    {{ form.categoria_pai.errors }}
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+
+                <button type="submit" style="background-color: var(--admin-primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: 0.2s;">
+                    Salvar Categoria
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .form-control, select {
+        width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Poppins', sans-serif;
+    }
+    /* Classe adicionada no forms.py */
+    .form-control:focus { outline: none; border-color: var(--admin-primary); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const nameInput = document.getElementById('{{ form.nome.id_for_label }}');
+    const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+
+    if(nameInput && slugInput) {
+        nameInput.addEventListener('keyup', function() {
+            if (!slugInput.value || slugInput.value === slugify(this.value.slice(0, -1))) {
+                slugInput.value = slugify(this.value);
+            }
+        });
+    }
+
+    function slugify(text) {
+        return text.toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+    }
+</script>
+{% endblock %}
+{% endblock %}

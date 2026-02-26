@@ -1,0 +1,103 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Painel Kanban - Adm{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/painel_kanban.css' %}">
+{% endblock %}
+
+{% block content %}
+<audio id="audio-notificacao" preload="auto"></audio>
+
+<div class="kanban-board">
+    
+    <!-- COLUNA 1 -->
+    <div class="kanban-column" data-status="AGUARDANDO_PAGAMENTO">
+        <div class="column-header header-aguardando">
+            <div style="display: flex; align-items: center;">
+                <div class="header-checkbox-container">
+                    <input type="checkbox" class="select-all-checkbox" title="Selecionar Todos">
+                </div>
+                <span>Pedido Recebido</span>
+            </div>
+            <span class="count" id="count-pendentes">{{ pendentes.count }}</span>
+        </div>
+        <div class="column-body" id="col-pendentes">
+            {% for pedido in pendentes %}
+                {% include 'pedidos/card_kanban.html' with pedido=pedido %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- COLUNA 2 -->
+    <div class="kanban-column" data-status="EM_ANDAMENTO">
+        <div class="column-header header-andamento">
+            <div style="display: flex; align-items: center;">
+                <div class="header-checkbox-container">
+                    <input type="checkbox" class="select-all-checkbox" title="Selecionar Todos">
+                </div>
+                <span>Em Andamento</span>
+            </div>
+            <span class="count">{{ em_andamento.count }}</span>
+        </div>
+        <div class="column-body" id="col-andamento">
+            {% for pedido in em_andamento %}
+                {% include 'pedidos/card_kanban.html' with pedido=pedido %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- COLUNA 3 -->
+    <div class="kanban-column" data-status="PRONTO">
+        <div class="column-header header-pronto" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="header-checkbox-container">
+                    <input type="checkbox" class="select-all-checkbox" title="Selecionar Todos">
+                </div>
+                <span>Pronto p/ Entrega</span>
+                <span class="count">{{ prontos.count }}</span>
+            </div>
+            
+            <button id="btn-limpar-prontos" title="Arquivar todos os pedidos prontos" 
+                    style="background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+                <i class='bx bx-trash' style="font-size: 1.3rem;"></i>
+            </button>
+        </div>
+        
+        <div class="column-body" id="col-prontos">
+            {% for pedido in prontos %}
+                {% include 'pedidos/card_kanban.html' with pedido=pedido %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- INCLUSÃO DO MODAL DE DETALHES -->
+<!-- Verifique se o caminho do include condiz com a sua pasta de templates -->
+{% include 'pedidos/modal_detalhes.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const KANBAN_CONFIG = {
+        urlApiDetalhes: "/pedidos/api/", 
+        urlApiAtualizarStatus: "/pedidos/api/kanban/atualizar/", 
+        urlApiLimparProntos: "/pedidos/api/kanban/limpar-prontos/" 
+    };
+
+    // Repassando a URL de detalhes para o pedidos.js usar
+    const PEDIDOS_CONFIG = {
+        urlApiDetalhesBase: KANBAN_CONFIG.urlApiDetalhes
+    };
+</script>
+
+<script src="{% static 'js/painel_kanban.js' %}?v=19"></script>
+
+<!-- CARREGAMENTO DO SCRIPT QUE CONTROLA O MODAL -->
+<script src="{% static 'js/pedidos.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Configurações da Loja{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos dos Cards de Configuração */
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+    }
+
+    .config-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        padding: 25px;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--admin-secondary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .card-title i { color: var(--admin-primary); font-size: 1.3rem; }
+
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; }
+
+    /* Switch Customizado para Checkboxes */
+    .switch-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dashed #eee;
+    }
+    .switch-wrapper:last-child { border-bottom: none; }
+    
+    .switch-label { font-weight: 500; color: #333; }
+    
+    /* Toggle Switch CSS */
+    .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #0be881; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Botão Flutuante ou Fixo */
+    .btn-save-fixed {
+        background-color: var(--admin-primary); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+    }
+    .btn-save-fixed:hover { transform: translateY(-2px); background-color: #d81b60; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h2 style="color: var(--admin-secondary); margin: 0;">Configurações</h2>
+            <p style="color: #666; margin: 5px 0 0 0;">Gerencie o funcionamento e dados da sua loja.</p>
+        </div>
+        <button type="submit" class="btn-save-fixed">
+            <i class='bx bx-save'></i> Salvar Alterações
+        </button>
+    </div>
+
+    {% if form.errors %}
+        <div class="alert alert-error" style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            Verifique os erros no formulário.
+        </div>
+    {% endif %}
+
+    <div class="config-grid">
+        
+        <!-- CARD 1: STATUS DA LOJA -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-store'></i> Funcionamento</div>
+            
+            <div class="switch-wrapper" style="background: #f8fff9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #c8e6c9;">
+                <span class="switch-label" style="font-size: 1.1rem;">Loja Aberta?</span>
+                <label class="switch">
+                    {{ form.is_aberto }}
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <p style="font-size: 0.8rem; color: #666; margin-top: -10px; margin-bottom: 20px;">Se desligado, clientes não poderão fazer pedidos.</p>
+
+            <div class="form-group">
+                <label>Texto de Horário</label>
+                {{ form.horario_funcionamento }}
+            </div>
+            
+            <div class="form-group">
+                <label>Tempo Médio de Entrega</label>
+                {{ form.tempo_medio_entrega }}
+            </div>
+        </div>
+
+        <!-- CARD 2: DADOS GERAIS -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-id-card'></i> Dados da Empresa</div>
+            
+            <div class="form-group">
+                <label>Nome Fantasia (Nome no Site)</label>
+                {{ form.nome_fantasia }}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Telefone / WhatsApp</label>
+                    {{ form.telefone_comercial }}
+                </div>
+                <div class="form-group">
+                    <label>CNPJ</label>
+                    {{ form.cnpj }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Endereço Completo</label>
+                {{ form.endereco_completo }}
+            </div>
+        </div>
+
+        <!-- CARD 3: VENDAS E PAGAMENTOS -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-wallet'></i> Vendas e Pagamento</div>
+            
+            <div class="form-group">
+                <label>Taxa de Entrega Padrão (R$)</label>
+                {{ form.taxa_entrega_padrao }}
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <strong style="display: block; margin-bottom: 10px; color: #555;">Modalidades</strong>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Faz Entrega (Delivery)</span>
+                    <label class="switch">{{ form.aceita_entrega }}<span class="slider"></span></label>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Retirada no Local</span>
+                    <label class="switch">{{ form.aceita_retirada }}<span class="slider"></span></label>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <strong style="display: block; margin-bottom: 10px; color: #555;">Meios de Pagamento</strong>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Pix</span>
+                    <label class="switch">{{ form.pagamento_pix }}<span class="slider"></span></label>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Cartão de Crédito</span>
+                    <label class="switch">{{ form.pagamento_cartao_credito }}<span class="slider"></span></label>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Dinheiro</span>
+                    <label class="switch">{{ form.pagamento_dinheiro }}<span class="slider"></span></label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Chave PIX (Para exibir no checkout)</label>
+                {{ form.chave_pix_pagamento }}
+            </div>
+        </div>
+
+    </div>
+</form>
+{% endblock %}

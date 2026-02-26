@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Criar Conta - Doce Bolaria{% endblock %}
+
+{% block content %}
+<main class="container page-content" style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+    
+    <div class="store-info-card" style="width: 100%; max-width: 400px; flex-direction: column; align-items: stretch; padding: 2rem;">
+        
+        <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--color-primary, #333);">Criar Conta</h2>
+
+        <form method="POST" action="{% url 'usuarios:cadastro' %}">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% for field in form %}
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        {{ field.label }}
+                    </label>
+                    
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 5px;">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <div style="color: #c62828; font-size: 0.85rem; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="checkout-button" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                Cadastrar
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+            <p>Já possui uma conta? <a href="{% url 'usuarios:login' %}" style="color: var(--color-accent-blue, #007BFF); font-weight: 600;">Faça login aqui</a></p>
+        </div>
+    </div>
+
+</main>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos dos inputs */
+    .store-info-card input[type="text"],
+    .store-info-card input[type="email"],
+    .store-info-card input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* === MENSAGENS DE ALERTA (CORREÇÃO DO ERRO DO VSCODE) === */
+    .alert {
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    /* O Django retorna tags: 'success' ou 'error' */
+    .alert-success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .alert-error {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    /* Ajuste para textos de ajuda do Django */
+    .helptext ul { list-style: none; padding: 0; margin: 0; }
+</style>
+{% endblock %}

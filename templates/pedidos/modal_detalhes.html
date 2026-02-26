@@ -1,0 +1,239 @@
+<div class="modal-overlay" id="order-details-modal">
+    <div class="modal-content">
+        <button class="modal-close-btn" id="close-order-modal">&times;</button>
+        
+        <div class="modal-header">
+            <span id="modal-order-status" class="modal-status">-</span>
+            <h3 id="modal-order-title">Carregando...</h3>
+            <p id="modal-order-date" style="color: #888; font-size: 0.9rem;">-</p>
+        </div>
+
+        <div class="modal-body">
+            <!-- Novos campos: Dados do Cliente -->
+            <div class="modal-detail-row">
+                <span class="modal-detail-label">Cliente</span>
+                <div class="modal-detail-value" id="modal-order-customer">-</div>
+            </div>
+
+            <div class="modal-detail-row" id="modal-order-phone-row" style="display: none;">
+                <span class="modal-detail-label">Telefone</span>
+                <div class="modal-detail-value" id="modal-order-phone">-</div>
+            </div>
+
+            <div class="modal-detail-row">
+                <span class="modal-detail-label">Endereço de Entrega</span>
+                <div class="modal-detail-value" id="modal-order-address">-</div>
+            </div>
+
+            <div class="modal-detail-row">
+                <span class="modal-detail-label">Forma de Pagamento</span>
+                <div class="modal-detail-value" id="modal-order-payment">-</div>
+                
+                <!-- Sub-campos de pagamento -->
+                <div class="payment-extra" id="modal-payment-card-brand" style="display: none;">
+                    <span class="tag-extra">Bandeira:</span> <span id="modal-card-brand-value">-</span>
+                </div>
+                
+                <!-- Atualizado para mostrar o Troco e quanto Levar de Troco -->
+                <div class="payment-extra" id="modal-payment-change" style="display: none; flex-direction: column; align-items: flex-start; gap: 4px;">
+                    <div>
+                        <span class="tag-extra">Troco para:</span> 
+                        <span id="modal-change-value" style="font-weight: 600;">-</span>
+                    </div>
+                    <div>
+                        <span class="tag-extra" style="color: #d32f2f;">Levar Troco:</span> 
+                        <span id="modal-change-return" style="font-weight: 600; color: #d32f2f;">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-detail-row" id="modal-order-schedule-row" style="display: none;">
+                <span class="modal-detail-label">Agendado para</span>
+                <div class="modal-detail-value" id="modal-order-schedule">-</div>
+            </div>
+
+            <div class="modal-detail-row">
+                <span class="modal-detail-label">Itens do Pedido</span>
+                <ul class="modal-items-list" id="modal-order-items">
+                    <!-- Os itens (li) serão injetados pelo JS aqui usando as classes estilizadas abaixo -->
+                </ul>
+            </div>
+
+            <div class="modal-total">
+                <span>Total</span>
+                <span id="modal-order-total">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* === ESTILOS DO MODAL === */
+
+    /* 1. O Fundo Escuro (Overlay) */
+    .modal-overlay {
+        display: none; 
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0,0,0,0.6);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(3px); /* Blur sutil e moderno */
+    }
+
+    /* 2. Classe Mágica que o JS ativa */
+    .modal-overlay.active {
+        display: flex !important;
+    }
+
+    /* 3. A Caixa Branca (Conteúdo) */
+    .modal-content {
+        background: #fff;
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 4. Botão de Fechar */
+    .modal-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #999;
+        transition: color 0.2s, transform 0.2s;
+        line-height: 1;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-close-btn:hover { 
+        color: #333; 
+        background: #f5f5f5;
+    }
+
+    /* 5. Cabeçalho do Modal */
+    .modal-header { 
+        border-bottom: 2px dashed #eee; 
+        margin-bottom: 1.5rem; 
+        padding-bottom: 1rem; 
+        text-align: center;
+    }
+    .modal-status {
+        display: inline-block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: var(--color-primary, #e91e63);
+        background: rgba(233, 30, 99, 0.1);
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-bottom: 8px;
+    }
+    .modal-header h3 { margin: 0; color: #333; font-size: 1.6rem; font-weight: 700; }
+    
+    /* 6. Corpo e Linhas de Detalhe */
+    .modal-body { font-size: 0.95rem; }
+    
+    .modal-detail-row { margin-bottom: 1.2rem; }
+    .modal-detail-label { 
+        display: block; 
+        color: #999; 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+        font-weight: 700; 
+        margin-bottom: 4px; 
+    }
+    .modal-detail-value { color: #333; font-weight: 500; line-height: 1.4; }
+
+    /* Estilos Extras (Bandeira e Troco) */
+    .payment-extra {
+        margin-top: 6px;
+        font-size: 0.9rem;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tag-extra { font-weight: 600; color: #666; font-size: 0.8rem; text-transform: uppercase; }
+
+    /* 7. Lista de Itens (Design Estilo Recibo) */
+    .modal-items-list { 
+        list-style: none; 
+        padding: 0; 
+        margin-top: 8px; 
+        border: 1px solid #eee; 
+        border-radius: 8px; 
+        overflow: hidden; 
+        background: #fafafa;
+    }
+    
+    /* Classes preparadas para o seu JS usar ao injetar os itens */
+    .modal-item { 
+        padding: 12px 15px; 
+        border-bottom: 1px solid #eee; 
+    }
+    .modal-item:last-child { border-bottom: none; }
+    
+    .modal-item-main { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: flex-start; 
+    }
+    .modal-item-qty { font-weight: 700; color: #555; margin-right: 8px; }
+    .modal-item-name { flex: 1; color: #333; font-weight: 600; }
+    .modal-item-price { font-weight: 600; color: #333; margin-left: 10px; white-space: nowrap; }
+    
+    .modal-item-obs { 
+        display: inline-block; 
+        margin-top: 8px; 
+        font-size: 0.85rem; 
+        color: #555; 
+        font-style: italic; 
+        background-color: #fff9c4; 
+        padding: 5px 10px; 
+        border-radius: 6px; 
+        border: 1px dashed #d4c35b; 
+        width: fit-content;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    /* 8. Total */
+    .modal-total { 
+        margin-top: 25px; 
+        padding-top: 15px; 
+        border-top: 2px solid #eee; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        font-weight: 800; 
+        font-size: 1.4rem; 
+        color: #333; 
+    }
+</style>

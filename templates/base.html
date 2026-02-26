@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Doce Bolaria Vinhais{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="icon" href="{% static 'imagem/logo_site.png' %}" type="image/png">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="{% static 'imagem/logo_site.png' %}" alt="Logo Doce Bolaria" class="logo-img">
+                <h1>Doce Bolaria Vinhais</h1>
+            </div>
+            <div class="search-bar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Buscar no cardápio">
+            </div>
+            <nav class="main-nav">
+                <a href="/" class="nav-link active">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Início</span>
+                </a>
+                <a href="{% url 'pedidos:historico' %}" class="nav-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                  <span>Pedidos</span>
+                </a>
+                
+                <div class="profile-menu">
+                    <a href="#" class="nav-link" id="profile-menu-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span>Perfil</span>
+                    </a>
+                    <div class="profile-dropdown" id="profile-dropdown-menu">
+                        <div class="dropdown-item user-greeting">Olá, {{ user.get_full_name|default:'Pedro' }}</div>
+                        <button class="dropdown-item" data-modal-target="edit-profile-modal">Editar dados</button>
+                        <button class="dropdown-item" data-modal-target="change-password-modal">Alterar senha</button>
+                        <a href="{% url 'usuarios:logout' %}" class="dropdown-item">Sair</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+    <div class="modal" id="edit-profile-modal">
+        <div class="modal-header">
+            <button class="modal-close-btn">&times;</button>
+            <h3>Complete seus dados</h3>
+        </div>
+        <div class="modal-body">
+            <form id="edit-profile-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_nome_completo">Nome e sobrenome completo</label>
+                    <input type="text" name="nome_completo" id="id_nome_completo" value="{{ user.perfilcliente.nome_completo|default:'' }}">
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_cpf">CPF ou CNPJ</label>
+                        <input type="text" name="cpf" id="id_cpf" value="{{ user.perfilcliente.cpf|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_data_nascimento">Data de nascimento</label>
+                        <input type="text" name="data_nascimento" id="id_data_nascimento" placeholder="dd/mm/aaaa" value="{{ user.perfilcliente.data_nascimento|date:'d/m/Y'|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="id_telefone">Telefone</label>
+                    <input type="text" name="telefone" id="id_telefone" value="{{ user.perfilcliente.telefone|default:'' }}">
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="id_email">E-mail</label>
+                    <input type="email" name="email" id="id_email" value="{{ user.email|default:'' }}" readonly disabled>
+                     <small>O e-mail não pode ser alterado.</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_cep">CEP</label>
+                        <input type="text" name="cep" id="id_cep" value="{{ user.perfilcliente.enderecos.first.cep|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_endereco">Endereço</label>
+                        <input type="text" name="endereco" id="id_endereco" placeholder="Rua e número" value="{{ user.perfilcliente.enderecos.first.logradouro|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn primary">Continuar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="change-password-modal">
+        <div class="modal-header">
+            <button class="modal-close-btn">&times;</button>
+            <h3>Nova senha</h3>
+        </div>
+        <div class="modal-body">
+            <h4>Cadastre uma nova senha</h4>
+            <form id="change-password-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_old_password">Senha atual</label>
+                    <input type="password" name="old_password" id="id_old_password" required>
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="id_new_password1">Nova senha (mínimo 8 caracteres)</label>
+                    <input type="password" name="new_password1" id="id_new_password1" required>
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="id_new_password2">Confirmar nova senha</label>
+                    <input type="password" name="new_password2" id="id_new_password2" required>
+                    <div class="form-error"></div>
+                </div>
+                <button type="submit" class="btn primary">Atualizar senha</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'js/home.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

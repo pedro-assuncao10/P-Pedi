@@ -1,0 +1,188 @@
+/* === Reset e Variáveis Globais === */
+:root {
+    --primary-color: #E91E63; /* Cor principal rosa/magenta */
+    --primary-light: #FCE4EC;
+    --text-color: #333;
+    --text-light: #757575;
+    --background-color: #F9F9F9;
+    --border-color: #E0E0E0;
+    --white-color: #FFFFFF;
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 12px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* === Header Principal === */
+.main-header {
+    background-color: var(--white-color);
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.logo-img {
+    height: 40px;
+    width: 40px;
+}
+
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+.nav-link.active, .nav-link:hover {
+    color: var(--primary-color);
+}
+.nav-link.active {
+    background-color: var(--primary-light);
+}
+
+/* === Conteúdo da Página de Histórico === */
+.page-content {
+    padding-top: 32px;
+    padding-bottom: 32px;
+}
+
+.history-container {
+    background-color: var(--white-color);
+    padding: 24px 32px;
+    border-radius: var(--border-radius);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.history-container h2 {
+    font-size: 1.75rem;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.empty-history {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-light);
+}
+
+.order-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.order-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background-color: #FAFAFA;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.order-status {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+/* Cores dos Status */
+.status-entregue { background-color: #C8E6C9; color: #2E7D32; }
+.status-processando { background-color: #FFF9C4; color: #FBC02D; }
+.status-enviado { background-color: #BBDEFB; color: #1976D2; }
+.status-cancelado { background-color: #FFCDD2; color: #D32F2F; }
+.status-aguardando_pagamento { background-color: #FFECB3; color: #FFA000; }
+
+.order-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.order-detail strong {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.order-detail span, .order-detail li {
+    font-weight: 500;
+}
+
+.order-detail ul {
+    list-style: none;
+}
+
+.order-detail.total-value span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.order-footer {
+    padding: 16px 24px;
+    background-color: #FAFAFA;
+    text-align: right;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-details {
+    font-weight: 600;
+    color: var(--primary-color);
+}

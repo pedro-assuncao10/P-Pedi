@@ -1,0 +1,135 @@
+/* static/css/painel_kanban.css */
+
+/* === LAYOUT === */
+.kanban-board {
+    display: flex; gap: 1.5rem; padding: 2rem;
+    height: calc(100vh - 80px); overflow-x: auto;
+    background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.kanban-column {
+    flex: 1; min-width: 320px; background: #ebecf0;
+    border-radius: 12px; display: flex; flex-direction: column;
+    height: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.column-header {
+    padding: 1rem; color: white; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+    text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+    border-top-left-radius: 12px; border-top-right-radius: 12px;
+}
+.header-aguardando { background-color: #ff5e57; }
+.header-andamento  { background-color: #ffa801; }
+.header-pronto     { background-color: #0be881; }
+
+.column-body {
+    padding: 0.8rem; flex-grow: 1; overflow-y: auto; scroll-behavior: smooth;
+}
+
+/* === CARD === */
+.kanban-card {
+    background: white; 
+    padding: 1rem; 
+    /* Adicionamos padding na esquerda para dar espaço ao checkbox */
+    padding-left: 3.5rem; 
+    border-radius: 10px;
+    margin-bottom: 0.8rem; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    cursor: grab; 
+    border-left: 5px solid transparent;
+    transition: all 0.2s ease;
+    position: relative; /* Necessário para o checkbox absolute */
+}
+
+.kanban-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+}
+.kanban-card:active { cursor: grabbing; }
+
+/* Bordas coloridas indicativas */
+.kanban-column[data-status="AGUARDANDO_PAGAMENTO"] .kanban-card { border-left-color: #ff5e57; }
+.kanban-column[data-status="EM_ANDAMENTO"] .kanban-card { border-left-color: #ffa801; }
+.kanban-column[data-status="PRONTO"] .kanban-card { border-left-color: #0be881; }
+
+/* Card Selecionado */
+.kanban-card.selected {
+    background-color: #fff0f3; /* Fundo levemente rosado */
+    border-color: #ff5e57 !important; /* Borda forçada para a cor do tema */
+}
+
+.sortable-ghost { background: #e2e4e9; opacity: 0.5; border: 2px dashed #999; }
+.count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; }
+.time-badge { background: #f1f3f4; color: #5f6368; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+#audio-notificacao { display: none; }
+
+/* === CHECKBOXES CUSTOMIZADOS (O Pulo do Gato) === */
+
+/* Checkbox do Card (Redondo e Suave) */
+.card-checkbox {
+    /* Remove o estilo padrão feio do navegador */
+    appearance: none; 
+    -webkit-appearance: none;
+    
+    /* Posicionamento */
+    position: absolute;
+    left: 15px; /* Distância da esquerda */
+    top: 50%;   /* Centraliza verticalmente */
+    transform: translateY(-50%); /* Ajuste fino do centro */
+    
+    /* Tamanho e Forma */
+    width: 22px;
+    height: 22px;
+    border-radius: 50%; /* Deixa redondo */
+    border: 2px solid #d1d5db; /* Cinza suave */
+    background-color: white;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+/* Estado Hover (Ao passar o mouse) */
+.kanban-card:hover .card-checkbox {
+    border-color: #b0b0b0;
+    transform: translateY(-50%) scale(1.1); /* Leve aumento */
+}
+
+/* Estado Checked (Selecionado) */
+.card-checkbox:checked {
+    background-color: #ff5e57; /* Cor da sua marca */
+    border-color: #ff5e57;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+    background-size: 65% 65%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Checkbox do Cabeçalho (Select All) - Ajustado para alinhar */
+.header-checkbox-container { 
+    display: flex; 
+    align-items: center; 
+    margin-right: 12px; 
+}
+
+.select-all-checkbox { 
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px; 
+    height: 18px; 
+    border-radius: 4px; /* Quadrado arredondado no header */
+    border: 2px solid rgba(255,255,255,0.6); 
+    background: transparent;
+    cursor: pointer;
+}
+
+.select-all-checkbox:checked {
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23ff5e57' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+/* === MODAL === */
+.modal-content {
+    background: #fff; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.modal-close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; background: none; border: none; cursor: pointer; color: #666; }

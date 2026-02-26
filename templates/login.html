@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Doce Bolaria{% endblock %}
+
+{% block content %}
+<main class="container page-content" style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+    
+    <div class="store-info-card" style="width: 100%; max-width: 400px; flex-direction: column; align-items: stretch; padding: 2rem;">
+        
+        <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--color-primary, #333);">Acessar Conta</h2>
+
+        <form method="POST" action="{% url 'usuarios:login' %}">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="id_username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Usuário</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="id_password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Senha</label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="checkout-button" style="width: 100%; justify-content: center;">
+                Entrar
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+            <p>Ainda não tem cadastro? <a href="{% url 'usuarios:cadastro' %}" style="color: var(--color-accent-blue, #007BFF); font-weight: 600;">Cadastre-se aqui</a></p>
+        </div>
+    </div>
+
+</main>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Pequeno ajuste para garantir que os inputs do Django fiquem bonitos */
+    .store-info-card input[type="text"],
+    .store-info-card input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+    }
+</style>
+{% endblock %}

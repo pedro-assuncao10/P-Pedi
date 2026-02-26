@@ -1,0 +1,38 @@
+<div class="kanban-card" data-id="{{ pedido.id }}">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+        <span style="font-weight: bold; color: #333; font-size: 0.95rem;">
+            #{{ pedido.id }} - 
+            {% if pedido.cliente %}
+                {{ pedido.cliente.nome_completo|default:pedido.cliente.usuario.get_full_name|default:pedido.cliente.usuario.username }}
+            {% else %}
+                <span style="color: #999; font-style: italic;">Cliente Balcão</span>
+            {% endif %}
+        </span>
+        <span style="font-weight: bold; color: #e91e63;">R$ {{ pedido.valor_total|floatformat:2 }}</span>
+    </div>
+    
+    <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+        {% for item in pedido.itens.all|slice:":3" %}
+            <div style="margin-bottom: 2px;">{{ item.quantidade }}x {{ item.produto.nome }}</div>
+        {% endfor %}
+        {% if pedido.itens.count > 3 %}
+            <small style="color: #999;">+ {{ pedido.itens.count|add:"-3" }} itens...</small>
+        {% endif %}
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 8px;">
+        <span class="time-badge">{{ pedido.criado_em|date:"H:i" }}</span>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'pedidos:imprimir_pedido' pedido.id %}" target="_blank" 
+               title="Imprimir Pedido"
+               style="color: #666; text-decoration: none; display: flex; align-items: center;">
+                <i class='bx bx-printer' style="font-size: 1.3rem;"></i>
+            </a>
+            <button class="js-open-order" type="button" data-id="{{ pedido.id }}" 
+                    style="background:none; border:none; color: #2196F3; cursor:pointer; font-weight:600; font-size: 0.85rem;">
+                Ver Detalhes
+            </button>
+        </div>
+    </div>
+</div>

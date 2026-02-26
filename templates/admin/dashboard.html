@@ -1,0 +1,82 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Visão Geral{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Input escondido para passar a URL da API para o JS -->
+    <input type="hidden" id="dashboard-api-url" value="{% url 'dashboard:api_dados' %}">
+
+    <div class="page-header">
+        <h2>Visão Geral</h2>
+        <p>Acompanhe o desempenho da sua loja em tempo real.</p>
+    </div>
+
+    <!-- KPIs (Mantidos renderizados pelo Django no server-side) -->
+    <div class="kpi-grid">
+        <div class="kpi-card card-revenue">
+            <div class="kpi-icon"><i class='bx bx-money'></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Faturamento (Mês)</span>
+                <span class="kpi-value">R$ {{ faturamento_mes|floatformat:2 }}</span>
+            </div>
+        </div>
+        
+        <div class="kpi-card card-clients">
+            <div class="kpi-icon"><i class='bx bx-group'></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Total Clientes</span>
+                <span class="kpi-value">{{ total_clientes }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card card-orders">
+            <div class="kpi-icon"><i class='bx bx-time'></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Pedidos Pendentes</span>
+                <span class="kpi-value">{{ pedidos_pendentes }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de Gráficos -->
+    <div class="charts-grid">
+        <div class="chart-card wide">
+            <div class="chart-header">
+                <h3>Vendas da Semana</h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="salesLineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Comparativo Mensal</h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="monthlyBarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Vendas por Categoria</h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
