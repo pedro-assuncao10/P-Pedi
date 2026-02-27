@@ -83,6 +83,14 @@
                 </a>
             </li>
 
+            <li>
+                <!-- Link para Personalizar Loja -->
+                <a href="{% url 'customizacao:painel' %}" class="menu-link {% if request.resolver_match.url_name == 'painel' and request.resolver_match.app_name == 'customizacao' %}active{% endif %}">
+                    <i class='bx bx-palette'></i>
+                    <span>Personalizar Loja</span>
+                </a>
+            </li>
+
             <li class="menu-header">Catálogo</li>
             
             <li>

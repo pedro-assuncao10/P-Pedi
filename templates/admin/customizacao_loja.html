@@ -1,0 +1,192 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Personalizar Loja{% endblock %}
+
+{% block extra_css %}
+<style>
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+    }
+
+    .config-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        padding: 25px;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--admin-secondary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .card-title i { color: var(--admin-primary); font-size: 1.3rem; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; color: #555; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+
+    /* Estilo para os seletores de cor ficarem mais elegantes */
+    .color-picker {
+        padding: 2px 5px;
+        height: 45px;
+        cursor: pointer;
+    }
+
+    /* === BOLINHAS DE TEMAS RÁPIDOS === */
+    .theme-presets {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .theme-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        padding: 0;
+    }
+    .theme-btn:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .theme-btn.clean {
+        background-color: #ffffff;
+    }
+    .theme-btn.dark {
+        background-color: #1e1e1e; /* Cinza escuro elegante (VS Code / Gemini) */
+        border-color: #444;
+    }
+
+    .btn-save-fixed {
+        background-color: var(--admin-primary); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+    }
+    .btn-save-fixed:hover { transform: translateY(-2px); background-color: #d81b60; }
+    
+    .current-image-preview {
+        margin-top: 10px;
+        max-width: 100%;
+        max-height: 120px;
+        border-radius: 8px;
+        border: 1px dashed #ccc;
+        padding: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- enctype='multipart/form-data' é CRÍTICO para permitir upload de imagens -->
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h2 style="color: var(--admin-secondary); margin: 0;">Aparência da Loja</h2>
+            <p style="color: #666; margin: 5px 0 0 0;">Personalize as cores, imagens e layout da sua vitrine.</p>
+        </div>
+        <button type="submit" class="btn-save-fixed">
+            <i class='bx bx-palette'></i> Salvar Aparência
+        </button>
+    </div>
+
+    {% if form.errors %}
+        <div class="alert alert-error" style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            Verifique os erros no formulário: {{ form.errors }}
+        </div>
+    {% endif %}
+
+    <div class="config-grid">
+        
+        <!-- CARD 1: CORES -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-color-fill'></i> Paleta de Cores</div>
+            
+            <div class="form-group">
+                <label>Cor Principal (Botões, Links, Ícones)</label>
+                {{ form.cor_principal }}
+                <small style="color: #888; font-size: 0.8rem; display: block; margin-top: 5px;">Clique na caixa para selecionar a cor.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Cor de Fundo da Loja</label>
+                {{ form.cor_fundo }}
+                <small style="color: #888; font-size: 0.8rem; display: block; margin-top: 5px;">Recomendamos tons que não cansem a vista do cliente.</small>
+                
+                <!-- BOTÕES DE TEMAS RÁPIDOS -->
+                <div class="theme-presets">
+                    <span style="font-size: 0.85rem; color: #555; font-weight: 500;">Temas rápidos:</span>
+                    <button type="button" class="theme-btn clean" onclick="setThemeColor('#ffffff')" title="Tema Clean (Branco)"></button>
+                    <button type="button" class="theme-btn dark" onclick="setThemeColor('#1e1e1e')" title="Tema Dark (Escuro Elegante)"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: IMAGENS -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-image-add'></i> Identidade Visual</div>
+            
+            <div class="form-group">
+                <label>Logo da Loja</label>
+                {{ form.logo }}
+                {% if form.instance.logo %}
+                    <div style="margin-top: 10px;">
+                        <span style="font-size: 0.8rem; color: #666;">Logo atual:</span><br>
+                        <img src="{{ form.instance.logo.url }}" alt="Logo" class="current-image-preview" style="max-height: 80px;">
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group" style="margin-top: 25px;">
+                <label>Banner de Capa (Opcional)</label>
+                {{ form.foto_capa }}
+                {% if form.instance.foto_capa %}
+                    <div style="margin-top: 10px;">
+                        <span style="font-size: 0.8rem; color: #666;">Capa atual:</span><br>
+                        <img src="{{ form.instance.foto_capa.url }}" alt="Capa" class="current-image-preview">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- CARD 3: LAYOUT -->
+        <div class="config-card">
+            <div class="card-title"><i class='bx bx-layout'></i> Estrutura da Página</div>
+            
+            <div class="form-group">
+                <label>Direção do Menu / Layout</label>
+                {{ form.direcao_layout }}
+                <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+                    <strong>Vertical:</strong> Padrão, rola os produtos para baixo continuamente.<br>
+                    <strong>Horizontal:</strong> Organiza os produtos em formato de carrossel deslizando para os lados.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<!-- SCRIPT PARA TROCAR A COR DE FUNDO -->
+<script>
+    function setThemeColor(hexColor) {
+        // O Django gera os IDs dos inputs com o formato id_nome_do_campo
+        const bgInput = document.getElementById('id_cor_fundo');
+        if (bgInput) {
+            bgInput.value = hexColor;
+        }
+    }
+</script>
+{% endblock %}
