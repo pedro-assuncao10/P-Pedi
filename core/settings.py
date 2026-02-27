@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'empresas',
     'dashboard',
     'assinatura_indicacao',
+    'customizacao',
 ]
 
 MIDDLEWARE = [

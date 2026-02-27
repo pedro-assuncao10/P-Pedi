@@ -169,17 +169,46 @@ body {
     border-radius: 50%;
     background-color: var(--primary-color);
 }
+
+/* === BOTÕES E FOOTER (Estilizados e Modernizados) === */
 .checkout-footer {
     margin-top: 32px;
+    display: flex;
+    gap: 10px; /* Espaçamento entre os botões Voltar e Finalizar */
 }
-.btn.primary {
-    width: 100%;
-    background-color: var(--primary-color);
-    border: none;
-    color: var(--white-color);
+
+/* Base de todos os botões */
+.btn {
     padding: 16px;
     font-size: 1.1rem;
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: var(--font-family);
+    display: inline-block;
+}
+
+/* Botão Primário (Rosa) */
+.btn.primary {
+    flex-grow: 1; /* Ocupa o restante do espaço */
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+.btn.primary:hover {
+    background-color: #d81b60; /* Tom mais escuro */
+}
+
+/* Botão Secundário (Voltar / Cancelar) */
+.btn.secondary {
+    background-color: #f1f3f5;
+    color: #495057;
+    border: 1px solid #ced4da;
+    flex-basis: 30%; /* Ocupa uma parte menor na tela */
+}
+.btn.secondary:hover {
+    background-color: #e2e6ea;
+    color: #212529;
 }

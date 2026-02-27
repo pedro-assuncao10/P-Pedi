@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const stepDelivery = document.getElementById('step-delivery');
     const stepPayment = document.getElementById('step-payment');
     
-    // === NOVOS ELEMENTOS (ETAPA 3 - CONCLUSÃO) ===
+    // Elementos Etapa 3
     const stepConclusion = document.getElementById('step-conclusion');
     const successOrderId = document.getElementById('success-order-id');
     const successAddress = document.getElementById('success-address');
@@ -24,24 +24,63 @@ document.addEventListener("DOMContentLoaded", function() {
     const successTotal = document.getElementById('success-total');
     const successItems = document.getElementById('success-items');
 
-    // === ELEMENTOS DE AGENDAMENTO ===
-    const scheduleRadios = document.querySelectorAll('input[name="schedule_option"]');
-    const scheduleContainer = document.getElementById('schedule-container');
-    const scheduleInput = document.getElementById('scheduled_time');
-
     // === ELEMENTOS EXTRAS DE PAGAMENTO ===
     const cardBrandSelect = document.getElementById('card_brand');
     const changeForInput = document.getElementById('change_for');
-    // Campo de observação global foi removido
-
-    // Formulário Principal
     const checkoutForm = document.getElementById('checkout-form');
 
-    // === 2. Estado Inicial (Vindo do HTML) ===
-    let dadosCompletos = CHECKOUT_CONFIG.user.dadosCompletos;
+    // === 2. Estado Inicial ===
+    let dadosCompletos = (typeof CHECKOUT_CONFIG !== 'undefined' && CHECKOUT_CONFIG.user) ? CHECKOUT_CONFIG.user.dadosCompletos : false;
+
+    // === Lógica Condicional de Tempo de Entrega/Retirada ===
+    function updateEstimatedTime() {
+        const estimatedTimeSpan = document.getElementById('estimated-time');
+        if (!estimatedTimeSpan) return;
+
+        // Valores padrão de segurança caso a variável não exista no HTML
+        let timeDelivery = "40-60 min";
+        let timePickup = "30-40 min";
+
+        // Tenta pegar os tempos dinâmicos vindos do backend via CHECKOUT_CONFIG
+        if (typeof CHECKOUT_CONFIG !== 'undefined' && CHECKOUT_CONFIG.times) {
+            timeDelivery = CHECKOUT_CONFIG.times.delivery || timeDelivery;
+            timePickup = CHECKOUT_CONFIG.times.pickup || timePickup;
+        }
+        
+        const selectedDelivery = document.querySelector('input[name="delivery_option"]:checked');
+        if (selectedDelivery) {
+            if (selectedDelivery.value === 'delivery') {
+                estimatedTimeSpan.textContent = timeDelivery;
+            } else if (selectedDelivery.value === 'pickup') {
+                estimatedTimeSpan.textContent = timePickup;
+            }
+        }
+    }
+
+    // Listener global para capturar mudanças nos botões de rádio (Mais seguro contra falhas/cache parcial)
+    document.body.addEventListener('change', function(e) {
+        if (e.target.name === 'delivery_option') {
+            updateEstimatedTime();
+        }
+        if (e.target.name === 'payment_method') {
+            togglePaymentFields();
+        }
+    });
+
+    // Fallback Extra: Adiciona evento de 'click' nas labels inteiras (útil para mobile)
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', () => {
+            setTimeout(() => {
+                updateEstimatedTime();
+                togglePaymentFields();
+            }, 50);
+        });
+    });
+
+    // Chama na inicialização para exibir o tempo correto da opção marcada por padrão
+    updateEstimatedTime();
 
     // === 3. Funções Auxiliares ===
-    
     function goToStep(step) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
         
@@ -74,37 +113,40 @@ document.addEventListener("DOMContentLoaded", function() {
         if(modal) modal.classList.remove('active');
     }
 
-    // === 4. Lógica de Agendamento ===
-    if (scheduleRadios.length > 0) {
-        scheduleRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.value === 'schedule') {
-                    if (scheduleContainer) scheduleContainer.classList.remove('hidden');
-                    if (scheduleInput) scheduleInput.focus();
-                } else {
-                    if (scheduleContainer) scheduleContainer.classList.add('hidden');
-                    if (scheduleInput) scheduleInput.value = '';
-                }
-            });
-        });
+    // === Lógica Condicional de Pagamento ===
+    const creditDetails = document.getElementById('credit-card-details');
+    const moneyDetails = document.getElementById('money-change-details');
+
+    function togglePaymentFields() {
+        if(creditDetails) creditDetails.classList.add('hidden');
+        if(moneyDetails) moneyDetails.classList.add('hidden');
+
+        const selectedRadio = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedRadio) return; 
+
+        let selected = selectedRadio.value;
+
+        if ((selected === 'credit' || selected === 'debit') && creditDetails) {
+            creditDetails.classList.remove('hidden');
+        } else if (selected === 'money' && moneyDetails) {
+            moneyDetails.classList.remove('hidden');
+        }
     }
 
-    // === 5. Event Listeners de Navegação ===
+    togglePaymentFields();
 
+    // === 5. Event Listeners de Navegação ===
     if (btnContinue1) {
         btnContinue1.addEventListener('click', function() {
-            const deliveryOption = document.querySelector('input[name="delivery_option"]:checked').value;
-            const scheduleOption = document.querySelector('input[name="schedule_option"]:checked').value;
-
-            if (scheduleOption === 'schedule') {
-                const timeVal = scheduleInput ? scheduleInput.value : '';
-                if (!timeVal) {
-                    alert("Por favor, selecione uma data e horário para o agendamento.");
-                    if(scheduleInput) scheduleInput.focus();
-                    return; 
-                }
+            const deliveryRadio = document.querySelector('input[name="delivery_option"]:checked');
+            if (!deliveryRadio) {
+                alert("Desculpe, não há opções de entrega ou retirada disponíveis no momento.");
+                return;
             }
 
+            const deliveryOption = deliveryRadio.value;
+
+            // Se for delivery e o cliente não tiver dados completos, força preencher endereço
             if (deliveryOption === 'delivery' && !dadosCompletos) {
                 openModal();
             } else {
@@ -117,15 +159,9 @@ document.addEventListener("DOMContentLoaded", function() {
         btnBack2.addEventListener('click', () => goToStep(1));
     }
 
-    if (closeModal) {
-        closeModal.addEventListener('click', closeModalFunc);
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModalFunc();
-        });
-    }
+    // Modal Events
+    if (closeModal) closeModal.addEventListener('click', closeModalFunc);
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeModalFunc(); });
 
     // === 6. Envio do Formulário de Cadastro (Modal) ===
     if (registerForm) {
@@ -142,23 +178,18 @@ document.addEventListener("DOMContentLoaded", function() {
             fetch(CHECKOUT_CONFIG.urls.apiSalvarDados, { 
                 method: 'POST',
                 body: formData,
-                headers: { 
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken') 
-                }
+                headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
             })
             .then(response => response.json())
             .then(data => {
                 if(data.success) {
                     dadosCompletos = true;
-                    
                     if (addressDisplay && data.endereco) {
                         addressDisplay.innerHTML = `${data.endereco.logradouro}, ${data.endereco.numero} - ${data.endereco.bairro}`;
                         addressDisplay.classList.remove('text-muted');
                     }
-                    
                     closeModalFunc();
                     goToStep(2); 
-                    
                 } else {
                     alert('Erro ao salvar: ' + JSON.stringify(data.errors));
                 }
@@ -179,27 +210,27 @@ document.addEventListener("DOMContentLoaded", function() {
         checkoutForm.addEventListener('submit', function(e) {
             
             if (stepPayment.classList.contains('hidden')) return;
-
             e.preventDefault(); 
 
-            const deliveryOption = document.querySelector('input[name="delivery_option"]:checked').value;
-            const scheduleOption = document.querySelector('input[name="schedule_option"]:checked').value;
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-            
-            let scheduledTimeValue = null;
-            if (scheduleOption === 'schedule' && scheduleInput) {
-                scheduledTimeValue = scheduleInput.value;
-                if (!scheduledTimeValue) {
-                    alert("Data de agendamento inválida. Por favor, volte e selecione um horário.");
-                    goToStep(1);
-                    return;
-                }
+            const deliveryRadio = document.querySelector('input[name="delivery_option"]:checked');
+            const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+
+            if (!deliveryRadio || !paymentRadio) {
+                alert("Erro: Certifique-se de que selecionou o método de entrega e pagamento.");
+                return;
             }
+
+            const deliveryOption = deliveryRadio.value;
+            const paymentMethod = paymentRadio.value;
+            
+            // O valor é fixo para "agora" já que escondemos o agendamento
+            const scheduleOption = 'now';
+            let scheduledTimeValue = null;
 
             let cardBrandValue = '';
             let changeForValue = null;
 
-            if (paymentMethod === 'credit') {
+            if (paymentMethod === 'credit' || paymentMethod === 'debit') {
                 cardBrandValue = cardBrandSelect ? cardBrandSelect.value : '';
                 if (!cardBrandValue) {
                     alert("Por favor, selecione a bandeira do cartão.");
@@ -217,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const formData = new FormData(checkoutForm);
             
-            // Payload limpo sem a observacao geral
             const payload = {
                 delivery_option: deliveryOption,
                 schedule_option: scheduleOption,
@@ -251,12 +281,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         if (data.itens && Array.isArray(data.itens)) {
                             data.itens.forEach(item => {
                                 const li = document.createElement('li');
-                                li.innerText = item; // Aqui já virá concatenado com a observação se houver!
+                                li.innerText = item; 
                                 successItems.appendChild(li);
                             });
                         }
                     }
-                    
                     goToStep(3);
                 } else {
                     alert('Erro ao processar pedido: ' + (data.error || 'Erro desconhecido.'));

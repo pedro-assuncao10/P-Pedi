@@ -6,8 +6,8 @@
         <div class="store-info-card">
             <img src="{% static 'imagem/logo_site.png' %}" alt="Logo Doce Bolaria" class="store-logo">
             <div class="store-details">
-                <h2>Doce Bolaria Vinhais</h2>
-                <p>Avenida Três, 1 • <button class="info-btn" data-modal-target="store-info-modal">Mais informações</button></p>
+                <h2>{{ empresa.nome_fantasia|default:"Doce Bolaria Vinhais" }}</h2>
+                <p>{{ empresa.endereco_completo|default:"Avenida Três, 1" }} • <button class="info-btn" data-modal-target="store-info-modal">Mais informações</button></p>
                 
                 <div class="store-status">
                     {% if loja_aberta %}
@@ -19,7 +19,8 @@
                 </div>
                 
                 <div class="store-tags">
-                    <span class="tag">Entrega e Retirada</span>
+                    {% if empresa.aceita_entrega %}<span class="tag">Entrega</span>{% endif %}
+                    {% if empresa.aceita_retirada %}<span class="tag">Retirada</span>{% endif %}
                 </div>
             </div>
         </div>
@@ -68,7 +69,7 @@
     <!-- Modal de Informações da Loja -->
     <div class="modal" id="store-info-modal">
         <div class="modal-header">
-            <h3>Doce Bolaria Vinhais</h3>
+            <h3>{{ empresa.nome_fantasia|default:"Doce Bolaria Vinhais" }}</h3>
             <button class="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
@@ -82,10 +83,10 @@
             <div class="tab-content" id="tab-pagamento">
                 <h4 class="info-subtitle">Pagamento na entrega</h4>
                 <ul class="info-list simple">
-                    <li>PIX / TRANSFERÊNCIA</li>
-                    <li>DINHEIRO</li>
-                    <li>CRÉDITO</li>
-                    <li>DÉBITO</li>
+                    {% if empresa.pagamento_pix %}<li>PIX / TRANSFERÊNCIA</li>{% endif %}
+                    {% if empresa.pagamento_dinheiro %}<li>DINHEIRO</li>{% endif %}
+                    {% if empresa.pagamento_cartao_credito %}<li>CRÉDITO</li>{% endif %}
+                    {% if empresa.pagamento_cartao_debito %}<li>DÉBITO</li>{% endif %}
                 </ul>
             </div>
         </div>
@@ -97,10 +98,11 @@
             <button class="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body" id="product-modal-body">
+            <!-- Renderizado via JS -->
         </div>
     </div>
 
-    <!-- === NOVO MODAL: AVISO DE LOJA FECHADA === -->
+    <!-- === AVISO DE LOJA FECHADA === -->
     <div class="modal" id="store-closed-modal">
         <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
             <button class="modal-close-btn">&times;</button>
@@ -115,7 +117,6 @@
                 Nosso horário de funcionamento é: <br>
                 <strong>{{ empresa.horario_funcionamento|default:"Consulte as informações da loja" }}</strong>
             </p>
-            <!-- A classe modal-close-btn-action será usada no JS para fechar -->
             <button class="checkout-button modal-close-btn-action" style="width: 100%;">Entendi</button>
         </div>
     </div>
@@ -127,7 +128,7 @@
         const checkoutUrl = "{% url 'pagamentos:checkout' %}";
         
         // --- CONFIGURAÇÃO GLOBAL ---
-        // Passa a variável Python 'loja_aberta' para o JavaScript
+        // Passa a variável Python para o JavaScript (verificando o status da loja)
         const HOME_CONFIG = {
             isStoreOpen: "{{ loja_aberta|yesno:'true,false' }}" === "true"
         };

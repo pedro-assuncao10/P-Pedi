@@ -24,6 +24,7 @@ def home_view(request):
         'produtos': produtos_recentes,
         'categorias': categorias_populares,
         'loja_aberta': loja_aberta, # Passa para o template
+        'empresa': empresa, # Enviando para o template
     }
     return render(request, 'home.html', context)
 

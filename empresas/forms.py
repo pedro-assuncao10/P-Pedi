@@ -7,7 +7,7 @@ class ConfiguracaoLojaForm(forms.ModelForm):
         fields = [
             'nome_fantasia', 'telefone_comercial', 'cnpj',
             'is_aberto', 'horario_funcionamento', 'endereco_completo',
-            'aceita_entrega', 'aceita_retirada', 'tempo_medio_entrega', 'taxa_entrega_padrao',
+            'aceita_entrega', 'aceita_retirada', 'tempo_medio_entrega', 'tempo_medio_retirada', 'taxa_entrega_padrao',
             'pagamento_pix', 'pagamento_cartao_credito', 'pagamento_cartao_debito', 'pagamento_dinheiro',
             'chave_pix_pagamento'
         ]
@@ -18,6 +18,7 @@ class ConfiguracaoLojaForm(forms.ModelForm):
             'horario_funcionamento': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco_completo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'tempo_medio_entrega': forms.TextInput(attrs={'class': 'form-control'}),
+            'tempo_medio_retirada': forms.TextInput(attrs={'class': 'form-control'}), # Adicionado o widget aqui
             'taxa_entrega_padrao': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.50'}),
             'chave_pix_pagamento': forms.TextInput(attrs={'class': 'form-control'}),
             # Checkboxes usam classe form-check-input para ficarem bonitos no Bootstrap/Custom CSS

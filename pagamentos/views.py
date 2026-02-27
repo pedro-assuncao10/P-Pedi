@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from empresas.models import PerfilEmpresa # Importante: importar o modelo de configuração!
 
 class CheckoutView(LoginRequiredMixin, TemplateView):
     template_name = 'checkout.html' # Ou 'pagamentos/checkout.html' dependendo da sua pasta
@@ -27,4 +28,10 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         context['endereco'] = endereco
         context['perfil'] = perfil
         context['dados_completos'] = dados_completos
+        
+        # --- NOVA LÓGICA ---
+        # Busca as configurações da loja (pegando a primeira ou a que você definiu)
+        configuracao = PerfilEmpresa.objects.first()
+        context['configuracao'] = configuracao
+        
         return context

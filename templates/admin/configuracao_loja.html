@@ -110,6 +110,11 @@
                 <label>Tempo Médio de Entrega</label>
                 {{ form.tempo_medio_entrega }}
             </div>
+
+            <div class="form-group">
+                <label>Tempo Médio de Retirada</label>
+                {{ form.tempo_medio_retirada }}
+            </div>
         </div>
 
         <!-- CARD 2: DADOS GERAIS -->
@@ -168,6 +173,10 @@
                 <div class="switch-wrapper">
                     <span class="switch-label">Cartão de Crédito</span>
                     <label class="switch">{{ form.pagamento_cartao_credito }}<span class="slider"></span></label>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">Cartão de Débito</span>
+                    <label class="switch">{{ form.pagamento_cartao_debito }}<span class="slider"></span></label>
                 </div>
                 <div class="switch-wrapper">
                     <span class="switch-label">Dinheiro</span>

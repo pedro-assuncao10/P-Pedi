@@ -42,6 +42,7 @@ class PerfilEmpresa(models.Model):
     aceita_retirada = models.BooleanField(default=True, verbose_name="Aceita Retirada (Balcão)")
     
     tempo_medio_entrega = models.CharField(max_length=50, default="40-60 min")
+    tempo_medio_retirada = models.CharField(max_length=50, default="30-40 min", verbose_name="Tempo Médio de Retirada")
     taxa_entrega_padrao = models.DecimalField(
         max_digits=6, decimal_places=2, default=5.00, 
         verbose_name="Taxa de Entrega Padrão (R$)"
