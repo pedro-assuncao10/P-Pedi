@@ -1,0 +1,219 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Gestão Financeira{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finance-header { margin-bottom: 30px; }
+    .finance-header h2 { margin: 0; color: var(--admin-secondary, #2c3e50); }
+    .finance-header p { color: #7f8c8d; margin-top: 5px; }
+
+    /* === SEÇÃO 1: PLANEJAMENTO (META) === */
+    .planning-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .card h3 { font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #34495e; }
+
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+    
+    .input-group { display: flex; align-items: center; }
+    .input-group-addon { background: #f8f9fa; border: 1px solid #ddd; border-right: none; padding: 10px; border-radius: 6px 0 0 6px; font-weight: 600; color: #555; }
+    .input-group input { border-radius: 0 6px 6px 0; }
+    
+    .input-group.right .input-group-addon { border-right: 1px solid #ddd; border-left: none; border-radius: 0 6px 6px 0; }
+    .input-group.right input { border-radius: 6px 0 0 6px; }
+
+    .meta-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .meta-display h4 { font-size: 1.2rem; margin-bottom: 10px; font-weight: 500; opacity: 0.9; }
+    .meta-display .big-number { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; }
+    .meta-display p { font-size: 0.9rem; opacity: 0.8; line-height: 1.5; }
+
+    /* === SEÇÃO 2: REALIDADE (DESEMPENHO) === */
+    .reality-section h2 { margin-bottom: 20px; color: var(--admin-secondary, #2c3e50); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    
+    .reality-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+    
+    .stat-card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        border-left: 4px solid #ccc;
+    }
+    .stat-card.revenue { border-color: #3498db; }
+    .stat-card.profit { border-color: #2ecc71; }
+    .stat-card.danger { border-color: #e74c3c; }
+    .stat-card.warning { border-color: #f1c40f; }
+    
+    .stat-card span { display: block; font-size: 0.85rem; color: #7f8c8d; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card strong { font-size: 1.5rem; color: #2c3e50; font-weight: 700; }
+
+    /* Classes de cor para evitar erros no VS Code */
+    .text-profit { color: #2ecc71 !important; }
+    .text-danger { color: #e74c3c !important; }
+
+    .progress-wrapper { background: #fff; padding: 24px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+    .progress-bar-container { width: 100%; background-color: #f1f2f6; border-radius: 20px; overflow: hidden; height: 25px; margin-top: 10px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: white; font-weight: bold; font-size: 0.8rem; transition: width 1s ease; }
+
+    .btn-submit { background: var(--primary-color, #E91E63); color: #fff; border: none; padding: 12px 20px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; transition: 0.3s;}
+    .btn-submit:hover { opacity: 0.9; }
+
+    @media(max-width: 900px) {
+        .planning-section { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="finance-header">
+    <h2>Gestão Financeira</h2>
+    <p>Calcule seu Ponto de Equilíbrio e acompanhe sua meta em tempo real.</p>
+</div>
+
+<!-- ================= SEÇÃO 1: PLANEJAMENTO ================= -->
+<div class="planning-section">
+    <div class="card">
+        <h3>1. Custos e Objetivos da Empresa</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Folha de Pessoal (R$)</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">R$</span>
+                        <input type="number" step="0.01" name="gasto_pessoal" class="form-control" value="{{ config.gasto_pessoal }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Custos Operacionais (R$)</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">R$</span>
+                        <input type="number" step="0.01" name="gasto_operacional" class="form-control" value="{{ config.gasto_operacional }}">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Imposto</label>
+                    <div class="input-group right">
+                        <input type="number" step="0.01" name="imposto_pct" class="form-control" value="{{ config.imposto_pct }}">
+                        <span class="input-group-addon">%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Material/Insumo</label>
+                    <div class="input-group right">
+                        <input type="number" step="0.01" name="custo_material_pct" class="form-control" value="{{ config.custo_material_pct }}">
+                        <span class="input-group-addon">%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="color: #27ae60;">Lucro Ideal</label>
+                    <div class="input-group right">
+                        <input type="number" step="0.01" name="lucro_desejado_pct" class="form-control" value="{{ config.lucro_desejado_pct }}" style="border-color: #27ae60;">
+                        <span class="input-group-addon" style="border-color: #27ae60; color: #27ae60;">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit"><i class='bx bx-calculator'></i> Recalcular Meta</button>
+        </form>
+    </div>
+
+    <div class="meta-display">
+        {% if erro_matematico %}
+            <h4>Atenção! Matemática Impossível</h4>
+            <p>A soma dos seus custos variáveis (Imposto + Material + Lucro) ultrapassa ou iguala 100% da venda. É impossível pagar as contas fixas assim. Reduza os percentuais.</p>
+        {% else %}
+            <h4>Meta de Faturamento (Mês)</h4>
+            <div class="big-number">R$ {{ meta_faturamento|floatformat:2 }}</div>
+            <p>Se você faturar esse valor exato, você pagará <strong>R$ {{ custo_fixo_total }}</strong> de custos fixos, pagará seus insumos/impostos e colocará exatos <strong>{{ config.lucro_desejado_pct }}%</strong> no bolso limpo!</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ================= SEÇÃO 2: REALIDADE (App Pedidos) ================= -->
+<div class="reality-section">
+    <h2>Realidade: {{ mes_atual }}</h2>
+    
+    <div class="progress-wrapper">
+        <div style="display: flex; justify-content: space-between; font-weight: 600; color: #555;">
+            <span>Progresso da Meta</span>
+            <span>{{ progresso_meta }}% concluído</span>
+        </div>
+        
+        <!-- Barra de Progresso c/ Script para contornar erro no VS Code -->
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="meta-progress-bar"></div>
+        </div>
+        <script>
+            document.getElementById('meta-progress-bar').style.width = "{{ progresso_meta }}%";
+        </script>
+        
+    </div>
+
+    <div class="reality-grid" style="margin-top: 20px;">
+        <div class="stat-card revenue">
+            <span>Faturamento Bruto</span>
+            <strong>R$ {{ faturamento_real|floatformat:2 }}</strong>
+        </div>
+        
+        <div class="stat-card warning">
+            <span>Gasto Estimado (Matéria Prima)</span>
+            <strong>R$ {{ material_real|floatformat:2 }}</strong>
+        </div>
+        
+        <div class="stat-card warning">
+            <span>Gasto Estimado (Impostos)</span>
+            <strong>R$ {{ imposto_real|floatformat:2 }}</strong>
+        </div>
+
+        <div class="stat-card {% if lucro_real > 0 %}profit{% else %}danger{% endif %}">
+            <span>Lucro Líquido Atual</span>
+            
+            <!-- Uso de classes em vez de estilo inline para evitar erros no editor -->
+            <strong class="{% if lucro_real > 0 %}text-profit{% else %}text-danger{% endif %}">
+                R$ {{ lucro_real|floatformat:2 }}
+            </strong>
+            
+            <small style="display: block; margin-top: 5px; color: #999;">
+                {% if lucro_real < 0 %}
+                    Ainda falta dinheiro para cobrir os custos fixos.
+                {% else %}
+                    Você já pagou tudo e começou a lucrar!
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

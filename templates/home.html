@@ -2,12 +2,35 @@
 {% load static %}
 
 {% block content %}
+
+    <!-- O bloco das CORES GLOBAIS foi movido para o base.html -->
+    <!-- Aqui mantemos apenas o código para a capa do cartão da loja, pois isso é exclusivo da home -->
+    {% if customizacao and customizacao.foto_capa %}
+        {% if customizacao.cor_fundo == '#1e1e1e' or customizacao.cor_fundo == '#000000' %}
+            <style>
+                .store-info-card {
+                    background-image: linear-gradient(to right, rgba(45,45,45,0.95) 0%, rgba(45,45,45,0.6) 100%), url('{{ customizacao.foto_capa.url }}') !important;
+                }
+            </style>
+        {% else %}
+            <style>
+                .store-info-card {
+                    background-image: linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 100%), url('{{ customizacao.foto_capa.url }}') !important;
+                }
+            </style>
+        {% endif %}
+    {% endif %}
+
     <main class="container page-content">
+        <!-- O container agora está mais limpo, o fundo é aplicado pelo bloco de style acima -->
         <div class="store-info-card">
-            <img src="{% static 'imagem/logo_site.png' %}" alt="Logo Doce Bolaria" class="store-logo">
+             
+            <!-- === LOGO AUMENTADA PARA 130px E COM SOMBRA ELEGANTE === -->
+            <img src="{% if customizacao and customizacao.logo %}{{ customizacao.logo.url }}{% else %}{% static 'imagem/logo_site.png' %}{% endif %}" alt="Logo Loja" class="store-logo" style="width: 130px !important; height: 130px !important; min-width: 130px !important; min-height: 130px !important; aspect-ratio: 1/1; object-fit: contain !important; padding: 2px; flex-shrink: 0 !important; background-color: var(--white-color, #fff); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            
             <div class="store-details">
-                <h2>{{ empresa.nome_fantasia|default:"Doce Bolaria Vinhais" }}</h2>
-                <p>{{ empresa.endereco_completo|default:"Avenida Três, 1" }} • <button class="info-btn" data-modal-target="store-info-modal">Mais informações</button></p>
+                <h2>{{ empresa.nome_fantasia|default:"Empresa anônima" }}</h2>
+                <p>{{ empresa.endereco_completo|default:"consulte Endereço com o lojista" }} • <button class="info-btn" data-modal-target="store-info-modal">Mais informações</button></p>
                 
                 <div class="store-status">
                     {% if loja_aberta %}
@@ -128,11 +151,12 @@
         const checkoutUrl = "{% url 'pagamentos:checkout' %}";
         
         // --- CONFIGURAÇÃO GLOBAL ---
-        // Passa a variável Python para o JavaScript (verificando o status da loja)
+        // Adicionada a direção do layout (horizontal ou vertical) para o Javascript
         const HOME_CONFIG = {
-            isStoreOpen: "{{ loja_aberta|yesno:'true,false' }}" === "true"
+            isStoreOpen: "{{ loja_aberta|yesno:'true,false' }}" === "true",
+            layoutDirection: "{{ customizacao.direcao_layout|default:'vertical' }}"
         };
     </script>
     
-    <script src="{% static 'js/home.js' %}"></script>
+    <!-- REMOVIDO A CHAMADA DO home.js DAQUI. ELE JÁ É CHAMADO NO base.html -->
 {% endblock %}

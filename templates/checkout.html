@@ -1,11 +1,9 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - Doce Bolaria Vinhais</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+{% block title %}Checkout - {{ empresa.nome_fantasia|default:"Doce Bolaria Vinhais" }}{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
     <style>
         .hidden { display: none !important; }
@@ -13,30 +11,29 @@
         /* Modal Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #fff; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--white-color, #fff); padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         
-        .modal-section-title { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-top: 1rem; }
+        .modal-section-title { font-size: 1.1rem; font-weight: 600; color: var(--text-color, #333); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color, #eee); padding-bottom: 0.5rem; margin-top: 1rem; }
         .modal-section-title:first-child { margin-top: 0; }
 
         .form-row { display: flex; gap: 1rem; }
         .form-group { margin-bottom: 1rem; flex: 1; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; }
-        .form-group input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-family: 'Poppins', sans-serif; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; color: var(--text-color, #333); }
+        .form-group input { width: 100%; padding: 0.8rem; border: 1px solid var(--border-color, #ddd); border-radius: 8px; font-family: 'Poppins', sans-serif; background-color: var(--background-color, #fff); color: var(--text-color, #333); }
 
         /* Estilos Extras para Pagamento */
         .payment-extra-field {
             margin-top: 10px;
-            background: #f8f9fa;
+            background: var(--background-color, #f8f9fa);
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--border-color, #e9ecef);
         }
-        .payment-extra-field label { display: block; font-weight: 600; margin-bottom: 5px; color: #555; }
+        .payment-extra-field label { display: block; font-weight: 600; margin-bottom: 5px; color: var(--text-color, #555); }
         .payment-extra-field input, .payment-extra-field select, .payment-extra-field textarea {
-            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-family: 'Poppins', sans-serif;
+            width: 100%; padding: 10px; border: 1px solid var(--border-color, #ced4da); border-radius: 6px; font-family: 'Poppins', sans-serif; background-color: var(--white-color, #fff); color: var(--text-color, #333);
         }
 
-        /* Alerta de Loja Fechada / Sem Opções */
         .alert-warning {
             background-color: #fff3cd;
             color: #856404;
@@ -47,260 +44,247 @@
             text-align: center;
             font-weight: 500;
         }
+
+        .checkout-page-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .conclusion-card h2, .conclusion-card p, .conclusion-card strong { color: var(--text-color, #333); }
     </style>
-</head>
-<body>
-    <div class="checkout-container">
-        <header class="checkout-header">
-            <a href="{% url 'catalogo:home' %}" class="back-link">&lsaquo;</a>
-            <h2>Checkout</h2>
-        </header>
+{% endblock %}
 
-         <div class="stepper">
-            <div class="step active" id="step-indicator-1">
-                <div class="step-number">1</div>
-                <div class="step-label">Entrega</div>
-            </div>
-            <div class="step-line"></div>
-            <div class="step" id="step-indicator-2">
-                <div class="step-number">2</div>
-                <div class="step-label">Pagamento</div>
-            </div>
-            <div class="step-line"></div>
-            <div class="step" id="step-indicator-3">
-                <div class="step-number">3</div>
-                <div class="step-label">Conclusão</div>
-            </div>
-        </div>
+{% block content %}
+    <div class="checkout-page-wrapper">
+        <div class="checkout-container">
+            <header class="checkout-header">
+                <a href="{% url 'catalogo:home' %}" class="back-link">&lsaquo;</a>
+                <h2>Checkout</h2>
+            </header>
 
-        <main class="checkout-main">
-            <!-- Verificação global de Loja Aberta -->
-            {% if configuracao and not configuracao.is_aberto %}
-                <div class="alert-warning" style="margin-top: 20px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    A loja encontra-se fechada no momento. Retornaremos em breve!
+             <div class="stepper">
+                <div class="step active" id="step-indicator-1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Entrega</div>
                 </div>
-            {% else %}
-            <form id="checkout-form">
-                {% csrf_token %}
-                
-                <div id="step-delivery">
-                    <section class="checkout-section">
-                        <h3>Opções de entrega</h3>
-                        <div class="option-group">
-                            
-                            <!-- Exibe aviso se nenhuma modalidade estiver ativa -->
-                            {% if configuracao and not configuracao.aceita_entrega and not configuracao.aceita_retirada %}
-                                <div class="alert-warning">
-                                    Desculpe, não estamos realizando entregas nem permitindo retiradas no momento.
-                                </div>
-                            {% endif %}
+                <div class="step-line"></div>
+                <div class="step" id="step-indicator-2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Pagamento</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step-indicator-3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Conclusão</div>
+                </div>
+            </div>
 
-                            <!-- Lógica para Delivery -->
-                            {% if not configuracao or configuracao.aceita_entrega %}
-                            <label class="option-card" id="card-delivery">
-                                <div class="option-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 18 1 18 1 3"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                </div>
-                                <div class="option-content">
-                                    <strong>Receber no seu endereço</strong>
-                                    <span id="address-display" class="text-muted">
-                                        {% if endereco %}
-                                            {{ endereco.logradouro }}, {{ endereco.numero }} - {{ endereco.bairro }}
-                                        {% else %}
-                                            Informe seu endereço completo
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <input type="radio" name="delivery_option" value="delivery" checked>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
-
-                            <!-- Lógica para Retirada -->
-                            {% if not configuracao or configuracao.aceita_retirada %}
-                             <label class="option-card">
-                                <div class="option-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                </div>
-                                <div class="option-content">
-                                    <strong>Retire na loja</strong>
-                                    <span>{{ configuracao.endereco_completo|default:"Avenida Três, 1" }}</span>
-                                </div>
-                                <span class="option-extra">GRÁTIS</span>
-                                <input type="radio" name="delivery_option" value="pickup" {% if configuracao and not configuracao.aceita_entrega %}checked{% endif %}>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
-                        </div>
-                    </section>
-
-                    <section class="checkout-section">
-                        <h3>Quando deseja receber?</h3>
-                        <div class="option-group">
-                            <label class="option-card">
-                                <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <main class="checkout-main">
+                {% if configuracao and not configuracao.is_aberto %}
+                    <div class="alert-warning" style="margin-top: 20px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        A loja encontra-se fechada no momento. Retornaremos em breve!
+                    </div>
+                {% else %}
+                <form id="checkout-form">
+                    {% csrf_token %}
+                    
+                    <div id="step-delivery">
+                        <section class="checkout-section">
+                            <h3>Opções de entrega</h3>
+                            <div class="option-group">
                                 
-                                <div class="option-content">
-                                    <strong>Pedido para agora</strong>
-                                    <span id="estimated-time">{{ configuracao.tempo_medio_entrega|default:"40-60 min" }}</span>
+                                {% if configuracao and not configuracao.aceita_entrega and not configuracao.aceita_retirada %}
+                                    <div class="alert-warning">
+                                        Desculpe, não estamos realizando entregas nem permitindo retiradas no momento.
+                                    </div>
+                                {% endif %}
+
+                                {% if not configuracao or configuracao.aceita_entrega %}
+                                <label class="option-card" id="card-delivery">
+                                    <div class="option-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 18 1 18 1 3"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                                    </div>
+                                    <div class="option-content">
+                                        <strong>Receber no seu endereço</strong>
+                                        <span id="address-display" class="text-muted">
+                                            {% if endereco %}
+                                                {{ endereco.logradouro }}, {{ endereco.numero }} - {{ endereco.bairro }}
+                                            {% else %}
+                                                Informe seu endereço completo
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <input type="radio" name="delivery_option" value="delivery" checked>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+
+                                {% if not configuracao or configuracao.aceita_retirada %}
+                                 <label class="option-card">
+                                    <div class="option-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                    </div>
+                                    <div class="option-content">
+                                        <strong>Retire na loja</strong>
+                                        <span>{{ configuracao.endereco_completo|default:"Avenida Três, 1" }}</span>
+                                    </div>
+                                    <span class="option-extra" style="color: var(--primary-color);">GRÁTIS</span>
+                                    <input type="radio" name="delivery_option" value="pickup" {% if configuracao and not configuracao.aceita_entrega %}checked{% endif %}>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+                            </div>
+                        </section>
+
+                        <section class="checkout-section">
+                            <h3>Quando deseja receber?</h3>
+                            <div class="option-group">
+                                <label class="option-card">
+                                    <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                                    
+                                    <div class="option-content">
+                                        <strong>Pedido para agora</strong>
+                                        <span id="estimated-time">{{ configuracao.tempo_medio_entrega|default:"40-60 min" }}</span>
+                                    </div>
+
+                                    <input type="radio" name="schedule_option" value="now" checked>
+                                    <span class="radio-check"></span>
+                                </label>
+                            </div>
+                        </section>
+                        
+                        <div class="checkout-footer">
+                            <button type="button" id="btn-continue-step1" class="btn primary">Continuar para Pagamento</button>
+                        </div>
+                    </div>
+
+                    <div id="step-payment" class="hidden">
+                        <section class="checkout-section">
+                            <h3>Forma de Pagamento</h3>
+                            <div class="option-group">
+
+                                {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito and not configuracao.pagamento_cartao_debito and not configuracao.pagamento_dinheiro %}
+                                    <div class="alert-warning">
+                                        Nenhum método de pagamento está configurado no momento. Contate a loja.
+                                    </div>
+                                {% endif %}
+
+                                {% if not configuracao or configuracao.pagamento_pix %}
+                                <label class="option-card">
+                                    <div class="option-content"><strong>PIX</strong></div>
+                                    <input type="radio" name="payment_method" value="pix" checked>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+                                
+                                {% if not configuracao or configuracao.pagamento_cartao_credito %}
+                                <label class="option-card">
+                                    <div class="option-content"><strong>Cartão de Crédito</strong></div>
+                                    <input type="radio" name="payment_method" value="credit" {% if configuracao and not configuracao.pagamento_pix %}checked{% endif %}>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+
+                                {% if not configuracao or configuracao.pagamento_cartao_debito %}
+                                <label class="option-card">
+                                    <div class="option-content"><strong>Cartão de Débito</strong></div>
+                                    <input type="radio" name="payment_method" value="debit" {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito %}checked{% endif %}>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+
+                                {% if not configuracao or configuracao.pagamento_dinheiro %}
+                                <label class="option-card">
+                                    <div class="option-content"><strong>Dinheiro</strong></div>
+                                    <input type="radio" name="payment_method" value="money" {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito and not configuracao.pagamento_cartao_debito %}checked{% endif %}>
+                                    <span class="radio-check"></span>
+                                </label>
+                                {% endif %}
+                            </div>
+
+                            <div id="credit-card-details" class="payment-extra-field hidden">
+                                <label for="card_brand">Selecione a Bandeira do Cartão:</label>
+                                <select name="card_brand" id="card_brand" style="border: 1px solid var(--border-color); background-color: var(--white-color); color: var(--text-color);">
+                                    <option value="" disabled selected>Escolha uma opção...</option>
+                                    <option value="Visa">Visa</option>
+                                    <option value="Mastercard">Mastercard</option>
+                                    <option value="Elo">Elo</option>
+                                    <option value="Amex">American Express</option>
+                                    <option value="Hipercard">Hipercard</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+
+                            <div id="money-change-details" class="payment-extra-field hidden">
+                                <label for="change_for">Troco para quanto? (R$)</label>
+                                <input type="number" step="0.01" name="change_for" id="change_for" placeholder="Ex: 50,00 ou deixe vazio se não precisar" style="border: 1px solid var(--border-color); background-color: var(--white-color); color: var(--text-color);">
+                                <small style="color: var(--text-light, #666); font-size: 0.8rem;">Se tiver o valor trocado, pode deixar em branco.</small>
+                            </div>
+
+                        </section>
+                        
+                        <div class="checkout-footer" style="display: flex; gap: 10px; width: 100%;">
+                            <button type="button" id="btn-back-step2" class="btn secondary">Voltar</button>
+                            <button type="submit" class="btn primary" style="width: 70%;">Finalizar Pedido</button>
+                        </div>
+                    </div>
+                    
+                    <div id="step-conclusion" class="hidden">
+                        <div class="conclusion-card" style="text-align: center; padding: 2rem;">
+                            
+                            <div style="margin-bottom: 1rem; color: #4CAF50;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </div>
+
+                            <h2>Pedido Realizado!</h2>
+                            <p style="margin-bottom: 2rem;">Seu pedido <strong id="success-order-id">#0000</strong> foi recebido com sucesso.</p>
+
+                            <div style="background: var(--background-color, #f9f9f9); border-radius: 8px; padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
+                                <h4 style="border-bottom: 1px solid var(--border-color, #eee); padding-bottom: 0.5rem; margin-bottom: 1rem; color: var(--text-color);">Resumo do Pedido</h4>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    <strong style="color: var(--text-color);">Endereço de Entrega/Retirada:</strong>
+                                    <div id="success-address" style="color: var(--text-light, #555);"></div>
                                 </div>
 
-                                <input type="radio" name="schedule_option" value="now" checked>
-                                <span class="radio-check"></span>
-                            </label>
-                            
-                            <!-- Opção Agendar Comentada / Futura Funcionalidade 
-                            <label class="option-card">
-                                <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4m-5 4h18"/></svg></div>
-                                <div class="option-content"><strong>Agendar pedido</strong></div>
-                                <input type="radio" name="schedule_option" value="schedule">
-                                <span class="radio-check"></span>
-                            </label>
-                            -->
-                        </div>
-                        
-                        <!-- Container de agendamento escondido
-                        <div id="schedule-container" class="hidden" style="margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-                            <label for="scheduled_time" style="display: block; margin-bottom: 8px; font-weight: 500; color: #555;">Escolha a data e horário:</label>
-                            <input type="datetime-local" id="scheduled_time" name="scheduled_time" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Poppins', sans-serif;">
-                        </div>
-                        -->
-                    </section>
-                    
-                    <div class="checkout-footer">
-                        <button type="button" id="btn-continue-step1" class="btn primary">Continuar para Pagamento</button>
-                    </div>
-                </div>
-
-                <div id="step-payment" class="hidden">
-                    <section class="checkout-section">
-                        <h3>Forma de Pagamento</h3>
-                        <div class="option-group">
-
-                            {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito and not configuracao.pagamento_cartao_debito and not configuracao.pagamento_dinheiro %}
-                                <div class="alert-warning">
-                                    Nenhum método de pagamento está configurado no momento. Contate a loja.
+                                <div style="margin-bottom: 1rem;">
+                                    <strong style="color: var(--text-color);">Forma de Pagamento:</strong>
+                                    <div id="success-payment" style="color: var(--text-light, #555);"></div>
                                 </div>
-                            {% endif %}
 
-                            <!-- PIX -->
-                            {% if not configuracao or configuracao.pagamento_pix %}
-                            <label class="option-card">
-                                <div class="option-content"><strong>PIX</strong></div>
-                                <input type="radio" name="payment_method" value="pix" checked>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
-                            
-                            <!-- CARTÃO DE CRÉDITO -->
-                            {% if not configuracao or configuracao.pagamento_cartao_credito %}
-                            <label class="option-card">
-                                <div class="option-content"><strong>Cartão de Crédito</strong></div>
-                                <input type="radio" name="payment_method" value="credit" {% if configuracao and not configuracao.pagamento_pix %}checked{% endif %}>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
+                                <div style="margin-bottom: 1rem;">
+                                    <strong style="color: var(--text-color);">Itens:</strong>
+                                    <ul id="success-items" style="color: var(--text-light, #555); padding-left: 1.2rem; margin-top: 0.5rem;"></ul>
+                                </div>
 
-                            <!-- CARTÃO DE DÉBITO -->
-                            {% if not configuracao or configuracao.pagamento_cartao_debito %}
-                            <label class="option-card">
-                                <div class="option-content"><strong>Cartão de Débito</strong></div>
-                                <input type="radio" name="payment_method" value="debit" {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito %}checked{% endif %}>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
-
-                            <!-- DINHEIRO -->
-                            {% if not configuracao or configuracao.pagamento_dinheiro %}
-                            <label class="option-card">
-                                <div class="option-content"><strong>Dinheiro</strong></div>
-                                <input type="radio" name="payment_method" value="money" {% if configuracao and not configuracao.pagamento_pix and not configuracao.pagamento_cartao_credito and not configuracao.pagamento_cartao_debito %}checked{% endif %}>
-                                <span class="radio-check"></span>
-                            </label>
-                            {% endif %}
-                        </div>
-
-                        <!-- Campo Extra: Bandeira do Cartão (Serve para Crédito e Débito) -->
-                        <div id="credit-card-details" class="payment-extra-field hidden">
-                            <label for="card_brand">Selecione a Bandeira do Cartão:</label>
-                            <select name="card_brand" id="card_brand">
-                                <option value="" disabled selected>Escolha uma opção...</option>
-                                <option value="Visa">Visa</option>
-                                <option value="Mastercard">Mastercard</option>
-                                <option value="Elo">Elo</option>
-                                <option value="Amex">American Express</option>
-                                <option value="Hipercard">Hipercard</option>
-                                <option value="Outros">Outros</option>
-                            </select>
-                        </div>
-
-                        <!-- Campo Extra: Troco -->
-                        <div id="money-change-details" class="payment-extra-field hidden">
-                            <label for="change_for">Troco para quanto? (R$)</label>
-                            <input type="number" step="0.01" name="change_for" id="change_for" placeholder="Ex: 50,00 ou deixe vazio se não precisar">
-                            <small style="color: #666; font-size: 0.8rem;">Se tiver o valor trocado, pode deixar em branco.</small>
-                        </div>
-
-                    </section>
-                    
-                    <!-- Botões Voltar e Finalizar (Estilizados inline) -->
-                    <div class="checkout-footer" style="display: flex; gap: 10px; width: 100%;">
-                        <button type="button" id="btn-back-step2" class="btn" style="background-color: #f1f3f5; color: #495057; border: 1px solid #ced4da; width: 30%; cursor: pointer;">Voltar</button>
-                        <button type="submit" class="btn primary" style="width: 70%;">Finalizar Pedido</button>
-                    </div>
-                </div>
-                
-                <div id="step-conclusion" class="hidden">
-                    <div class="conclusion-card" style="text-align: center; padding: 2rem;">
-                        
-                        <div style="margin-bottom: 1rem; color: #4CAF50;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        </div>
-
-                        <h2 style="color: #333;">Pedido Realizado!</h2>
-                        <p style="color: #666; margin-bottom: 2rem;">Seu pedido <strong id="success-order-id">#0000</strong> foi recebido com sucesso.</p>
-
-                        <div style="background: #f9f9f9; border-radius: 8px; padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
-                            <h4 style="border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">Resumo do Pedido</h4>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <strong>Endereço de Entrega/Retirada:</strong>
-                                <div id="success-address" style="color: #555;">-</div>
+                                <div style="font-size: 1.1rem; margin-top: 1rem; border-top: 1px solid var(--border-color, #ddd); padding-top: 1rem; display: flex; justify-content: space-between;">
+                                    <strong style="color: var(--text-color);">Total:</strong>
+                                    <!-- AQUI ESTAVA O PROBLEMA: --color-primary corrigido para --primary-color -->
+                                    <strong style="color: var(--primary-color, #e91e63);" id="success-total">R$ 0,00</strong>
+                                </div>
                             </div>
 
-                            <div style="margin-bottom: 1rem;">
-                                <strong>Forma de Pagamento:</strong>
-                                <div id="success-payment" style="color: #555;">-</div>
+                            <div class="checkout-footer" style="flex-direction: column;">
+                                <a href="{% url 'pedidos:historico' %}" class="btn primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Acompanhar Pedido</a>
+                                <a href="{% url 'catalogo:home' %}" class="btn secondary" style="margin-top: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">Voltar para o Início</a>
                             </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <strong>Itens:</strong>
-                                <ul id="success-items" style="color: #555; padding-left: 1.2rem; margin-top: 0.5rem;"></ul>
-                            </div>
-
-                            <div style="font-size: 1.1rem; margin-top: 1rem; border-top: 1px solid #ddd; padding-top: 1rem; display: flex; justify-content: space-between;">
-                                <strong>Total:</strong>
-                                <strong style="color: var(--color-primary, #e91e63);" id="success-total">R$ 0,00</strong>
-                            </div>
-                        </div>
-
-                        <div class="checkout-footer" style="flex-direction: column;">
-                            <a href="{% url 'pedidos:historico' %}" class="btn primary">Acompanhar Pedido</a>
-                            <a href="{% url 'catalogo:home' %}" class="btn" style="background-color: #f1f3f5; color: #495057; border: 1px solid #ced4da; margin-top: 10px;">Voltar para o Início</a>
                         </div>
                     </div>
-                </div>
-            </form>
-            {% endif %}
-        </main>
+                </form>
+                {% endif %}
+            </main>
+        </div>
     </div>
 
     <!-- MODAL DE CADASTRO -->
     <div class="modal-overlay" id="full-register-modal">
         <div class="modal-content">
-            <h3>Complete seu cadastro</h3>
-            <p style="margin-bottom: 20px; font-size: 0.9rem; color: #666;">Para realizar a entrega, precisamos de alguns dados.</p>
+            <h3 style="color: var(--text-color);">Complete seu cadastro</h3>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-light);">Para realizar a entrega, precisamos de alguns dados.</p>
             
             <form id="full-register-form">
                 {% csrf_token %}
@@ -358,11 +342,13 @@
                 </div>
 
                 <button type="submit" class="btn primary" style="width: 100%">Salvar e Continuar</button>
-                <button type="button" id="btn-close-modal" class="btn" style="width: 100%; margin-top: 10px; background-color: #f1f3f5; color: #495057; border: 1px solid #ced4da; cursor: pointer;">Cancelar</button>
+                <button type="button" id="btn-close-modal" class="btn secondary" style="width: 100%; margin-top: 10px; cursor: pointer;">Cancelar</button>
             </form>
         </div>
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script>
         const CHECKOUT_CONFIG = {
             urls: {
@@ -373,7 +359,6 @@
             user: {
                 dadosCompletos: "{{ dados_completos|yesno:'true,false' }}" === "true"
             },
-            // ADICIONE ESTE BLOCO AQUI PARA O JS SABER OS TEMPOS:
             times: {
                 delivery: "{{ configuracao.tempo_medio_entrega|default:'40-60 min'|escapejs }}",
                 pickup: "{{ configuracao.tempo_medio_retirada|default:'30-40 min'|escapejs }}"
@@ -381,5 +366,4 @@
         };
     </script>
     <script src="{% static 'js/checkout.js' %}"></script>
-</body>
-</html>
+{% endblock %}

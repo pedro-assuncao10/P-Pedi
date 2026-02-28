@@ -12,11 +12,21 @@ from xhtml2pdf import pisa
 from .models import Pedido
 from carrinho.cart import Cart
 from usuarios.permissions import eh_equipe
+from empresas.models import PerfilEmpresa # <-- IMPORTANTE: Importamos o modelo da Empresa
 
 @login_required
 def carrinho_detalhe_view(request):
     cart = Cart(request)
-    context = {'cart': cart}
+    
+    # --- LÓGICA DE CUSTOMIZAÇÃO ---
+    empresa = PerfilEmpresa.objects.first()
+    customizacao = getattr(empresa, 'customizacao', None) if empresa else None
+    
+    context = {
+        'cart': cart,
+        'empresa': empresa,
+        'customizacao': customizacao
+    }
     return render(request, 'carrinho_detalhe.html', context)
 
 class HistoricoPedidosView(LoginRequiredMixin, ListView):
@@ -26,6 +36,22 @@ class HistoricoPedidosView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Pedido.objects.filter(cliente__usuario=self.request.user).order_by('-criado_em')
+
+    # --- INJETANDO AS VARIÁVEIS NO TEMPLATE ---
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # 1. Pega a empresa
+        empresa = PerfilEmpresa.objects.first()
+        context['empresa'] = empresa
+        
+        # 2. Pega a customizacao e envia para o template
+        if empresa and hasattr(empresa, 'customizacao'):
+            context['customizacao'] = empresa.customizacao
+        else:
+            context['customizacao'] = None
+            
+        return context
 
 @login_required
 @user_passes_test(eh_equipe)

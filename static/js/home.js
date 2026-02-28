@@ -149,8 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateCartUI(cartData) {
         // === CORREÇÃO: Verificação de segurança ===
-        // Se o elemento 'cart-content' não existir na página (ex: página de pedidos),
-        // a função para aqui e evita o erro.
         if (!cartContent) return; 
 
         if (!cartData || cartData.items.length === 0) {
@@ -209,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ATUALIZADAS para usar o item_id (string) em vez do product_id (int) quando necessário
     const addToCart = (productId, quantity = 1, observation = '') => makeCartRequest(`${cartAddApiUrl}${productId}/`, 'POST', { quantity, observation });
     const removeFromCart = (itemId) => makeCartRequest(`${cartRemoveApiUrl}${itemId}/`);
     const updateCartItemQuantity = (itemId, quantity, observation) => makeCartRequest(`${cartUpdateApiUrl}${itemId}/`, 'POST', { quantity, observation });
@@ -236,20 +233,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<article class="product-card" data-product-id="${product.id}"><div class="product-info"><h3>${product.nome}</h3><p class="product-description">${product.descricao}</p><div class="product-price">R$ ${price}</div></div><div class="product-image"><img src="${imageUrl}" alt="${product.nome}"></div></article>`;
     }
 
-    // ATUALIZADO: Função que carrega e renderiza os dados, agora com busca
+    // ATUALIZADO: Função que carrega e renderiza os dados
     async function loadMenu(searchTerm = '') {
         if (!categoryMenu || !productContainer) return;
 
         let currentProductsApiUrl = productsApiUrl;
         if (searchTerm && searchTerm.trim() !== '') {
-            // Adiciona o parâmetro de busca à URL da API de produtos
             currentProductsApiUrl = `${productsApiUrl}?search=${encodeURIComponent(searchTerm)}`;
         }
 
         try {
             const [categoriesResponse, productsResponse] = await Promise.all([
                 fetch(categoriesApiUrl),
-                fetch(currentProductsApiUrl) // Usa a URL de produtos (com ou sem filtro)
+                fetch(currentProductsApiUrl)
             ]);
 
             if (!categoriesResponse.ok || !productsResponse.ok) {
@@ -276,7 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
             categories.forEach((category, index) => {
                 const categoryProducts = productsByCategory[category.id] || [];
                 
-                // Só mostra a categoria se houver produtos nela (em caso de busca)
                 if (categoryProducts.length > 0) {
                     const categoryLink = document.createElement('a');
                     categoryLink.href = `#category-${category.id}`;
@@ -287,18 +282,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     const categorySection = document.createElement('div');
                     categorySection.className = 'product-category';
                     categorySection.id = `category-${category.id}`;
+                    
                     const categoryTitle = document.createElement('h2');
                     categoryTitle.textContent = category.nome;
                     categorySection.appendChild(categoryTitle);
 
+                    // --- NOVA LÓGICA DE LAYOUT (HORIZONTAL / VERTICAL) ---
+                    // Cria uma div (wrapper) para segurar todos os produtos daquela categoria
+                    const productsWrapper = document.createElement('div');
+                    const layoutMode = (typeof HOME_CONFIG !== 'undefined' && HOME_CONFIG.layoutDirection) ? HOME_CONFIG.layoutDirection : 'vertical';
+                    // Adiciona a classe 'layout-horizontal' ou 'layout-vertical'
+                    productsWrapper.className = `products-wrapper layout-${layoutMode}`;
+
                     categoryProducts.forEach(product => {
-                        categorySection.innerHTML += createProductCardHTML(product);
+                        productsWrapper.innerHTML += createProductCardHTML(product);
                     });
+                    
+                    // Coloca os produtos na sessão e depois no DOM
+                    categorySection.appendChild(productsWrapper);
                     productContainer.appendChild(categorySection);
                 }
             });
             
-            // Ativa o primeiro link de categoria, se existir
             if(categoryMenu.firstChild) {
                 categoryMenu.firstChild.classList.add('active');
             }
@@ -313,7 +318,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NOVA LÓGICA DE BUSCA COM DEBOUNCE ---
     function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -326,10 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput) {
         searchInput.addEventListener('input', debounce((event) => {
             loadMenu(event.target.value);
-        }, 300)); // Espera 300ms após o utilizador parar de digitar
+        }, 300));
     }
-    
-    // --- NOVA LÓGICA PARA O MODAL DO PRODUTO ---
 
     async function openProductModal(productId) {
         try {
@@ -376,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const addToCartBtn = document.getElementById('add-to-cart-btn');
         const modalTotalPrice = document.getElementById('modal-total-price');
         
-        if (!addToCartBtn) return; // Segurança caso o modal não seja criado
+        if (!addToCartBtn) return; 
         
         const basePrice = parseFloat(addToCartBtn.dataset.basePrice);
 
@@ -417,13 +419,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 event.preventDefault();
                 const productId = productCard.dataset.productId;
                 if (productId) {
-                    openProductModal(productId); // Abre o modal em vez de adicionar direto
+                    openProductModal(productId);
                 }
             }
         });
     }
 
-    // CORREÇÃO: Listener único para a sacola usando delegação de eventos
     if (cartContent) {
         cartContent.addEventListener('click', (event) => {
             const target = event.target;
@@ -438,28 +439,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const currentQuantity = itemElement.dataset.quantity;
                 const newQuantity = prompt('Nova quantidade:', currentQuantity);
                 if (newQuantity !== null && !isNaN(newQuantity) && newQuantity >= 0) {
-                    // Aqui seria ideal também editar a observação, mas o prompt simplifica
                     updateCartItemQuantity(itemId, parseInt(newQuantity));
                 }
             }
         });
     }
 
-    // CORREÇÃO: Listener único para o botão LIMPAR
     if(clearCartButton) {
         clearCartButton.addEventListener('click', clearCart);
     }
 
-    // NOVO: Listener para o botão de "Continuar pedido"
     if(checkoutButton) {
         checkoutButton.addEventListener('click', () => {
-            // 1. Verifica se a loja está aberta
             if (typeof HOME_CONFIG !== 'undefined' && !HOME_CONFIG.isStoreOpen) {
                 openModal('store-closed-modal');
-                return; // Para tudo
+                return; 
             }
 
-            // 2. Verifica se a sacola não está vazia e botão não está desabilitado
             if (!checkoutButton.disabled && checkoutButton.textContent !== 'Sacola vazia') {
                 if (typeof checkoutUrl !== 'undefined') {
                     window.location.href = checkoutUrl;
@@ -483,4 +479,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initializePage();
 });
-

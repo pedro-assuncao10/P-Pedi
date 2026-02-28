@@ -1,9 +1,9 @@
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from empresas.models import PerfilEmpresa # Importante: importar o modelo de configuração!
+from empresas.models import PerfilEmpresa
 
 class CheckoutView(LoginRequiredMixin, TemplateView):
-    template_name = 'checkout.html' # Ou 'pagamentos/checkout.html' dependendo da sua pasta
+    template_name = 'checkout.html' 
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -13,15 +13,12 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         endereco = None
         dados_completos = False
 
-        # Verifica se tem perfil
         if hasattr(user, 'perfilcliente'):
             perfil = user.perfilcliente
-            # Verifica se tem endereço
             endereco = perfil.enderecos.filter(is_principal=True).first()
             if not endereco:
                 endereco = perfil.enderecos.first()
         
-        # Se tiver perfil E endereço, os dados estão completos
         if perfil and endereco:
             dados_completos = True
 
@@ -29,9 +26,17 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         context['perfil'] = perfil
         context['dados_completos'] = dados_completos
         
-        # --- NOVA LÓGICA ---
-        # Busca as configurações da loja (pegando a primeira ou a que você definiu)
-        configuracao = PerfilEmpresa.objects.first()
-        context['configuracao'] = configuracao
+        # --- LÓGICA DE CUSTOMIZAÇÃO E CONFIGURAÇÃO ---
+        empresa = PerfilEmpresa.objects.first()
+        
+        # Forma segura de buscar a customização, igual à Home!
+        customizacao = None
+        if empresa and hasattr(empresa, 'customizacao'):
+            customizacao = empresa.customizacao
+        
+        context['empresa'] = empresa
+        context['configuracao'] = empresa 
+        context['customizacao'] = customizacao
+        context['loja_aberta'] = empresa.is_aberto if empresa else True
         
         return context

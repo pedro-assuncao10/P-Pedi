@@ -91,6 +91,14 @@
                 </a>
             </li>
 
+            <li>
+                <!-- Link para Gestão Financeira -->
+                <a href="{% url 'financeiro:painel' %}" class="menu-link {% if request.resolver_match.url_name == 'painel' and request.resolver_match.app_name == 'financeiro' %}active{% endif %}">
+                    <i class='bx bx-line-chart'></i>
+                    <span>Gestão Financeira</span>
+                </a>
+            </li>
+
             <li class="menu-header">Catálogo</li>
             
             <li>

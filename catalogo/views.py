@@ -9,6 +9,7 @@ from .models import Categoria, Produto, ImagemProduto
 from .forms import CategoriaForm, ProdutoForm
 from usuarios.permissions import eh_equipe
 from empresas.models import PerfilEmpresa
+from customizacao.models import CustomizacaoEmpresa
 
 def home_view(request):
     """
@@ -20,11 +21,17 @@ def home_view(request):
     empresa = PerfilEmpresa.objects.first()
     loja_aberta = empresa.is_aberto if empresa else True
 
+    # --- NOVA LÓGICA: Busca a customização visual vinculada à empresa ---
+    customizacao = None
+    if empresa and hasattr(empresa, 'customizacao'):
+        customizacao = empresa.customizacao
+
     context = {
         'produtos': produtos_recentes,
         'categorias': categorias_populares,
         'loja_aberta': loja_aberta, # Passa para o template
         'empresa': empresa, # Enviando para o template
+        'customizacao': customizacao, # Enviando para o template
     }
     return render(request, 'home.html', context)
 

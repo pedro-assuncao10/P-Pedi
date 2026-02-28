@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'dashboard',
     'assinatura_indicacao',
     'customizacao',
+    'financeiro',
 ]
 
 MIDDLEWARE = [

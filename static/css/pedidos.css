@@ -1,15 +1,4 @@
-/* === Reset e Variáveis Globais === */
-:root {
-    --primary-color: #E91E63; /* Cor principal rosa/magenta */
-    --primary-light: #FCE4EC;
-    --text-color: #333;
-    --text-light: #757575;
-    --background-color: #F9F9F9;
-    --border-color: #E0E0E0;
-    --white-color: #FFFFFF;
-    --font-family: 'Poppins', sans-serif;
-    --border-radius: 12px;
-}
+/* === Reset e Variáveis Globais Removidas (Herdando do base.html) === */
 
 *, *::before, *::after {
     box-sizing: border-box;
@@ -18,9 +7,9 @@
 }
 
 body {
-    font-family: var(--font-family);
-    background-color: var(--background-color);
-    color: var(--text-color);
+    font-family: var(--font-family, 'Poppins', sans-serif);
+    background-color: var(--background-color, #F9F9F9);
+    color: var(--text-color, #333);
 }
 
 .container {
@@ -31,9 +20,9 @@ body {
 
 /* === Header Principal === */
 .main-header {
-    background-color: var(--white-color);
+    background-color: var(--white-color, #FFF);
     padding: 16px 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color, #E0E0E0);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -64,7 +53,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--text-color);
+    color: var(--text-color, #333);
     text-decoration: none;
     font-weight: 500;
     padding: 8px;
@@ -75,7 +64,7 @@ body {
     color: var(--primary-color);
 }
 .nav-link.active {
-    background-color: var(--primary-light);
+    background-color: var(--primary-light, #fce4ec);
 }
 
 /* === Conteúdo da Página de Histórico === */
@@ -85,9 +74,9 @@ body {
 }
 
 .history-container {
-    background-color: var(--white-color);
+    background-color: var(--white-color, #FFF);
     padding: 24px 32px;
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius, 12px);
     max-width: 900px;
     margin: 0 auto;
 }
@@ -96,18 +85,18 @@ body {
     font-size: 1.75rem;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color, #E0E0E0);
 }
 
 .empty-history {
     text-align: center;
     padding: 40px;
-    color: var(--text-light);
+    color: var(--text-light, #777);
 }
 
 .order-card {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color, #E0E0E0);
+    border-radius: var(--border-radius, 12px);
     margin-bottom: 24px;
     overflow: hidden;
     transition: box-shadow 0.2s;
@@ -122,8 +111,8 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    background-color: #FAFAFA;
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--background-color, #FAFAFA);
+    border-bottom: 1px solid var(--border-color, #E0E0E0);
 }
 
 .order-header h3 {
@@ -156,7 +145,7 @@ body {
 
 .order-detail strong {
     display: block;
-    color: var(--text-light);
+    color: var(--text-light, #777);
     font-size: 0.9rem;
     margin-bottom: 4px;
 }
@@ -177,12 +166,21 @@ body {
 
 .order-footer {
     padding: 16px 24px;
-    background-color: #FAFAFA;
+    background-color: var(--background-color, #FAFAFA);
     text-align: right;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color, #E0E0E0);
 }
 
 .btn-details {
     font-weight: 600;
     color: var(--primary-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: filter 0.2s;
+}
+
+.btn-details:hover {
+    filter: brightness(0.8);
 }

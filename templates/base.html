@@ -4,15 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Doce Bolaria Vinhais{% endblock %}</title>
+    <title>{% block title %}{{ empresa.nome_fantasia|default:"Empresa Anônima" }}{% endblock %}</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
-    <link rel="icon" href="{% static 'imagem/logo_site.png' %}" type="image/png">
     
+    <!-- Ícone da aba do navegador dinâmico -->
+    <link rel="icon" href="{% if customizacao and customizacao.logo %}{{ customizacao.logo.url }}{% else %}{% static 'imagem/logo_site.png' %}{% endif %}" type="image/png">
+    
+    <!-- === CORES DINÂMICAS GLOBAIS === -->
+    {% if customizacao %}
+        <style>
+            :root {
+                --primary-color: {{ customizacao.cor_principal|default:"#E91E63" }};
+                --background-color: {{ customizacao.cor_fundo|default:"#F9F9F9" }};
+            }
+        </style>
+        
+        <!-- Auto Dark Mode Global -->
+        {% if customizacao.cor_fundo == '#1e1e1e' or customizacao.cor_fundo == '#000000' %}
+            <style>
+                :root {
+                    --white-color: #2d2d2d; 
+                    --text-color: #f1f1f1;
+                    --text-light: #aaaaaa;
+                    --border-color: #444444;
+                }
+                .search-bar input { color: #f1f1f1 !important; }
+                /* Ajustes para modais e dropdowns no modo escuro */
+                .modal-content, .modal, .profile-dropdown { background-color: var(--white-color); border-color: var(--border-color); }
+                .dropdown-item:hover { background-color: var(--background-color); }
+            </style>
+        {% endif %}
+    {% endif %}
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -20,8 +48,9 @@
     <header class="main-header">
         <div class="container">
             <div class="logo-container">
-                <img src="{% static 'imagem/logo_site.png' %}" alt="Logo Doce Bolaria" class="logo-img">
-                <h1>Doce Bolaria Vinhais</h1>
+                <!-- LOGO DINÂMICA (Corrigida para não achatar e manter-se redonda) -->
+                <img src="{% if customizacao and customizacao.logo %}{{ customizacao.logo.url }}{% else %}{% static 'imagem/logo_site.png' %}{% endif %}" alt="Logo Loja" class="logo-img" style="object-fit: cover; border-radius: 50%; background-color: var(--white-color);">
+                <h1>{{ empresa.nome_fantasia|default:"Empresa anônima" }}</h1>
             </div>
             <div class="search-bar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -43,7 +72,7 @@
                         <span>Perfil</span>
                     </a>
                     <div class="profile-dropdown" id="profile-dropdown-menu">
-                        <div class="dropdown-item user-greeting">Olá, {{ user.get_full_name|default:'Pedro' }}</div>
+                        <div class="dropdown-item user-greeting">Olá, {{ user.get_full_name|default:'User Anônimo' }}</div>
                         <button class="dropdown-item" data-modal-target="edit-profile-modal">Editar dados</button>
                         <button class="dropdown-item" data-modal-target="change-password-modal">Alterar senha</button>
                         <a href="{% url 'usuarios:logout' %}" class="dropdown-item">Sair</a>

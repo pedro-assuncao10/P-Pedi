@@ -1,14 +1,4 @@
-/* === Reset e Variáveis Globais === */
-:root {
-    --primary-color: #E91E63;
-    --text-color: #333;
-    --text-light: #757575;
-    --background-color: #F9F9F9;
-    --border-color: #E0E0E0;
-    --white-color: #FFFFFF;
-    --font-family: 'Poppins', sans-serif;
-    --border-radius: 12px;
-}
+/* === Reset (Variáveis de Cor Globais REMOVIDAS para herdar do base.html) === */
 
 *, *::before, *::after {
     box-sizing: border-box;
@@ -16,21 +6,12 @@
     padding: 0;
 }
 
-body {
-    font-family: var(--font-family);
-    background-color: var(--background-color);
-    color: var(--text-color);
-    display: flex;
-    justify-content: center;
-    padding-top: 40px;
-}
-
 /* === Container Principal === */
 .checkout-container {
     width: 100%;
     max-width: 600px;
-    background-color: var(--white-color);
-    border-radius: var(--border-radius);
+    background-color: var(--white-color, #fff);
+    border-radius: var(--border-radius, 12px);
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     overflow: hidden;
 }
@@ -39,11 +20,11 @@ body {
     display: flex;
     align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color, #eee);
 }
 .back-link {
     font-size: 2rem;
-    color: var(--text-color);
+    color: var(--text-color, #333);
     text-decoration: none;
     margin-right: 16px;
 }
@@ -51,6 +32,7 @@ body {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0;
+    color: var(--text-color, #333);
 }
 
 /* === Stepper === */
@@ -65,25 +47,25 @@ body {
     align-items: center;
     flex-direction: column;
     gap: 8px;
-    color: var(--text-light);
+    color: var(--text-light, #777);
 }
 .step-number {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--border-color, #eee);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    background-color: var(--background-color);
+    background-color: var(--background-color, #f9f9f9);
 }
 .step-label {
     font-size: 0.875rem;
 }
 .step.active .step-number {
     background-color: var(--primary-color);
-    color: var(--white-color);
+    color: #ffffff; /* Sempre branco para contraste com a cor primária */
     border-color: var(--primary-color);
 }
 .step.active .step-label {
@@ -93,7 +75,7 @@ body {
 .step-line {
     flex-grow: 1;
     height: 2px;
-    background-color: var(--border-color);
+    background-color: var(--border-color, #eee);
 }
 
 /* === Conteúdo Principal === */
@@ -107,6 +89,7 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 16px;
+    color: var(--text-color, #333);
 }
 .option-group {
     display: flex;
@@ -117,28 +100,30 @@ body {
     display: flex;
     align-items: center;
     padding: 16px;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color, #eee);
+    border-radius: var(--border-radius, 12px);
     cursor: pointer;
     position: relative;
     transition: border-color 0.2s;
+    background-color: var(--white-color, #fff);
 }
 .option-card:has(input:checked) {
     border-color: var(--primary-color);
 }
 .option-icon {
     margin-right: 16px;
-    color: var(--text-light);
+    color: var(--text-light, #777);
 }
 .option-content {
     flex-grow: 1;
+    color: var(--text-color, #333);
 }
 .option-content strong {
     display: block;
 }
 .option-content span {
     font-size: 0.9rem;
-    color: var(--text-light);
+    color: var(--text-light, #777);
 }
 .option-extra {
     font-size: 0.9rem;
@@ -154,7 +139,7 @@ body {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--border-color, #eee);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -170,14 +155,13 @@ body {
     background-color: var(--primary-color);
 }
 
-/* === BOTÕES E FOOTER (Estilizados e Modernizados) === */
+/* === BOTÕES E FOOTER === */
 .checkout-footer {
     margin-top: 32px;
     display: flex;
-    gap: 10px; /* Espaçamento entre os botões Voltar e Finalizar */
+    gap: 10px; 
 }
 
-/* Base de todos os botões */
 .btn {
     padding: 16px;
     font-size: 1.1rem;
@@ -187,28 +171,28 @@ body {
     text-align: center;
     transition: all 0.3s ease;
     border: none;
-    font-family: var(--font-family);
+    font-family: inherit;
     display: inline-block;
 }
 
-/* Botão Primário (Rosa) */
+/* Botão Primário (Herda a cor do banco de dados) */
 .btn.primary {
-    flex-grow: 1; /* Ocupa o restante do espaço */
+    flex-grow: 1; 
     background-color: var(--primary-color);
-    color: var(--white-color);
+    color: #ffffff;
 }
+/* Efeito de hover inteligente: escurece a cor independente de qual for! */
 .btn.primary:hover {
-    background-color: #d81b60; /* Tom mais escuro */
+    filter: brightness(0.9);
 }
 
 /* Botão Secundário (Voltar / Cancelar) */
 .btn.secondary {
-    background-color: #f1f3f5;
-    color: #495057;
-    border: 1px solid #ced4da;
-    flex-basis: 30%; /* Ocupa uma parte menor na tela */
+    background-color: var(--background-color, #f1f3f5);
+    color: var(--text-color, #495057);
+    border: 1px solid var(--border-color, #ced4da);
+    flex-basis: 30%; 
 }
 .btn.secondary:hover {
-    background-color: #e2e6ea;
-    color: #212529;
+    filter: brightness(0.9);
 }
