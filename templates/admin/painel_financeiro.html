@@ -27,7 +27,7 @@
 
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
-    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; background: #fff; }
     
     .input-group { display: flex; align-items: center; }
     .input-group-addon { background: #f8f9fa; border: 1px solid #ddd; border-right: none; padding: 10px; border-radius: 6px 0 0 6px; font-weight: 600; color: #555; }
@@ -47,9 +47,67 @@
         align-items: center;
         text-align: center;
     }
-    .meta-display h4 { font-size: 1.2rem; margin-bottom: 10px; font-weight: 500; opacity: 0.9; }
+    .meta-display h4 { 
+        font-size: 1.2rem; 
+        margin-bottom: 10px; 
+        font-weight: 500; 
+        opacity: 0.9; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
     .meta-display .big-number { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; }
     .meta-display p { font-size: 0.9rem; opacity: 0.8; line-height: 1.5; }
+
+    /* --- ESTILO DO TOOLTIP INFORMATIVO --- */
+    .info-tooltip {
+        position: relative;
+        display: inline-flex;
+        cursor: pointer;
+    }
+    .info-tooltip i {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.2s;
+    }
+    .info-tooltip:hover i { color: #fff; }
+    
+    .info-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 280px;
+        background-color: #2c3e50;
+        color: #fff;
+        text-align: center;
+        border-radius: 8px;
+        padding: 12px;
+        position: absolute;
+        z-index: 10;
+        bottom: 130%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        font-weight: 400;
+        line-height: 1.4;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        pointer-events: none;
+    }
+    .info-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: #2c3e50 transparent transparent transparent;
+    }
+    .info-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
 
     /* === SEÇÃO 2: REALIDADE (DESEMPENHO) === */
     .reality-section h2 { margin-bottom: 20px; color: var(--admin-secondary, #2c3e50); border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -75,7 +133,6 @@
     .stat-card span { display: block; font-size: 0.85rem; color: #7f8c8d; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card strong { font-size: 1.5rem; color: #2c3e50; font-weight: 700; }
 
-    /* Classes de cor para evitar erros no VS Code */
     .text-profit { color: #2ecc71 !important; }
     .text-danger { color: #e74c3c !important; }
 
@@ -84,7 +141,7 @@
     .progress-bar { height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: white; font-weight: bold; font-size: 0.8rem; transition: width 1s ease; }
 
     .btn-submit { background: var(--primary-color, #E91E63); color: #fff; border: none; padding: 12px 20px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; transition: 0.3s;}
-    .btn-submit:hover { opacity: 0.9; }
+    .btn-submit:hover { filter: brightness(0.9); }
 
     @media(max-width: 900px) {
         .planning-section { grid-template-columns: 1fr; }
@@ -95,7 +152,7 @@
 {% block content %}
 <div class="finance-header">
     <h2>Gestão Financeira</h2>
-    <p>Calcule seu Ponto de Equilíbrio e acompanhe sua meta em tempo real.</p>
+    <p>Configure a estrutura da sua empresa e acompanhe as metas do mês em tempo real.</p>
 </div>
 
 <!-- ================= SEÇÃO 1: PLANEJAMENTO ================= -->
@@ -104,59 +161,77 @@
         <h3>1. Custos e Objetivos da Empresa</h3>
         <form method="POST">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label>Regime Tributário</label>
+                    <select name="regime_tributario" class="form-control">
+                        <option value="MEI" {% if config.regime_tributario == 'MEI' %}selected{% endif %}>MEI</option>
+                        <option value="SIMPLES" {% if config.regime_tributario == 'SIMPLES' %}selected{% endif %}>Simples Nacional</option>
+                        <option value="PRESUMIDO" {% if config.regime_tributario == 'PRESUMIDO' %}selected{% endif %}>Lucro Presumido</option>
+                        <option value="REAL" {% if config.regime_tributario == 'REAL' %}selected{% endif %}>Lucro Real</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Folha de Pessoal (R$)</label>
                     <div class="input-group">
                         <span class="input-group-addon">R$</span>
-                        <input type="number" step="0.01" name="gasto_pessoal" class="form-control" value="{{ config.gasto_pessoal }}">
+                        <!-- type="text" e classe mask-money para formatar via JS -->
+                        <input type="text" name="gasto_pessoal" class="form-control mask-money" value="{{ gasto_pessoal_input }}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Custos Operacionais (R$)</label>
+                    <label>Custos Extras (R$)</label>
                     <div class="input-group">
                         <span class="input-group-addon">R$</span>
-                        <input type="number" step="0.01" name="gasto_operacional" class="form-control" value="{{ config.gasto_operacional }}">
+                        <input type="text" name="gasto_operacional" class="form-control mask-money" value="{{ gasto_operacional_input }}">
                     </div>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div class="form-group">
-                    <label>Imposto</label>
+                    <label>Imposto Médio</label>
                     <div class="input-group right">
-                        <input type="number" step="0.01" name="imposto_pct" class="form-control" value="{{ config.imposto_pct }}">
+                        <!-- type="text" e classe mask-percent para formatar % -->
+                        <input type="text" name="imposto_pct" class="form-control mask-percent" value="{{ imposto_pct_input }}">
                         <span class="input-group-addon">%</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Material/Insumo</label>
                     <div class="input-group right">
-                        <input type="number" step="0.01" name="custo_material_pct" class="form-control" value="{{ config.custo_material_pct }}">
+                        <input type="text" name="custo_material_pct" class="form-control mask-percent" value="{{ custo_material_pct_input }}">
                         <span class="input-group-addon">%</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label style="color: #27ae60;">Lucro Ideal</label>
                     <div class="input-group right">
-                        <input type="number" step="0.01" name="lucro_desejado_pct" class="form-control" value="{{ config.lucro_desejado_pct }}" style="border-color: #27ae60;">
+                        <input type="text" name="lucro_desejado_pct" class="form-control mask-percent" value="{{ lucro_desejado_pct_input }}" style="border-color: #27ae60;">
                         <span class="input-group-addon" style="border-color: #27ae60; color: #27ae60;">%</span>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit"><i class='bx bx-calculator'></i> Recalcular Meta</button>
+            <button type="submit" class="btn-submit"><i class='bx bx-calculator'></i> Salvar e Recalcular</button>
         </form>
     </div>
 
     <div class="meta-display">
         {% if erro_matematico %}
             <h4>Atenção! Matemática Impossível</h4>
-            <p>A soma dos seus custos variáveis (Imposto + Material + Lucro) ultrapassa ou iguala 100% da venda. É impossível pagar as contas fixas assim. Reduza os percentuais.</p>
+            <p>A soma dos seus custos variáveis (Imposto + Material + Lucro) ultrapassa ou iguala 100% da sua margem. É impossível pagar as contas fixas assim. Reduza os percentuais.</p>
         {% else %}
-            <h4>Meta de Faturamento (Mês)</h4>
-            <div class="big-number">R$ {{ meta_faturamento|floatformat:2 }}</div>
-            <p>Se você faturar esse valor exato, você pagará <strong>R$ {{ custo_fixo_total }}</strong> de custos fixos, pagará seus insumos/impostos e colocará exatos <strong>{{ config.lucro_desejado_pct }}%</strong> no bolso limpo!</p>
+            <h4>
+                Meta de Faturamento (Mês)
+                <div class="info-tooltip">
+                    <i class='bx bx-info-circle'></i>
+                    <span class="tooltip-text">Isto é apenas uma simulação matemática projetada para lhe dar um norte. Dependendo do seu Regime Tributário, o cálculo de impostos pode sofrer grandes alterações. Consulte sempre o seu contador para dados oficiais.</span>
+                </div>
+            </h4>
+            <div class="big-number">R$ {{ meta_faturamento_str }}</div>
+            <p>Se você faturar esse valor exato, você pagará <strong>R$ {{ custo_fixo_total_str }}</strong> de custos fixos, pagará seus insumos/impostos e colocará exatos <strong>{{ config.lucro_desejado_pct|floatformat:2 }}%</strong> no bolso limpo!</p>
         {% endif %}
     </div>
 </div>
@@ -171,7 +246,6 @@
             <span>{{ progresso_meta }}% concluído</span>
         </div>
         
-        <!-- Barra de Progresso c/ Script para contornar erro no VS Code -->
         <div class="progress-bar-container">
             <div class="progress-bar" id="meta-progress-bar"></div>
         </div>
@@ -184,30 +258,29 @@
     <div class="reality-grid" style="margin-top: 20px;">
         <div class="stat-card revenue">
             <span>Faturamento Bruto</span>
-            <strong>R$ {{ faturamento_real|floatformat:2 }}</strong>
+            <strong>R$ {{ faturamento_real_str }}</strong>
         </div>
         
         <div class="stat-card warning">
             <span>Gasto Estimado (Matéria Prima)</span>
-            <strong>R$ {{ material_real|floatformat:2 }}</strong>
+            <strong>R$ {{ material_real_str }}</strong>
         </div>
         
         <div class="stat-card warning">
             <span>Gasto Estimado (Impostos)</span>
-            <strong>R$ {{ imposto_real|floatformat:2 }}</strong>
+            <strong>R$ {{ imposto_real_str }}</strong>
         </div>
 
-        <div class="stat-card {% if lucro_real > 0 %}profit{% else %}danger{% endif %}">
+        <div class="stat-card {% if lucro_real_raw > 0 %}profit{% else %}danger{% endif %}">
             <span>Lucro Líquido Atual</span>
             
-            <!-- Uso de classes em vez de estilo inline para evitar erros no editor -->
-            <strong class="{% if lucro_real > 0 %}text-profit{% else %}text-danger{% endif %}">
-                R$ {{ lucro_real|floatformat:2 }}
+            <strong class="{% if lucro_real_raw > 0 %}text-profit{% else %}text-danger{% endif %}">
+                R$ {{ lucro_real_str }}
             </strong>
             
             <small style="display: block; margin-top: 5px; color: #999;">
-                {% if lucro_real < 0 %}
-                    Ainda falta dinheiro para cobrir os custos fixos.
+                {% if lucro_real_raw < 0 %}
+                    Ainda falta faturar para cobrir custos fixos.
                 {% else %}
                     Você já pagou tudo e começou a lucrar!
                 {% endif %}
@@ -216,4 +289,51 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // Função universal para formatar dinheiro e percentagens em formato PT-BR
+        function formatarMoeda(input) {
+            let valor = input.value;
+            
+            // Remove tudo o que não for número
+            valor = valor.replace(/\D/g, "");
+            
+            if (valor === "") {
+                input.value = "";
+                return;
+            }
+
+            // Coloca 2 casas decimais e adiciona a vírgula
+            valor = (parseInt(valor) / 100).toFixed(2) + "";
+            valor = valor.replace(".", ",");
+            
+            // Adiciona o ponto de milhar (apenas para a classe mask-money)
+            if (input.classList.contains('mask-money')) {
+                valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            }
+            
+            input.value = valor;
+        }
+
+        // Aplica os listeners aos inputs de dinheiro (R$)
+        const moneyInputs = document.querySelectorAll('.mask-money');
+        moneyInputs.forEach(input => {
+            input.addEventListener('input', function() { formatarMoeda(this); });
+            // Força a formatação inicial caso o Django passe números puros
+            formatarMoeda(input); 
+        });
+
+        // Aplica os listeners aos inputs de percentagem (%)
+        const percentInputs = document.querySelectorAll('.mask-percent');
+        percentInputs.forEach(input => {
+            input.addEventListener('input', function() { formatarMoeda(this); });
+            formatarMoeda(input);
+        });
+        
+    });
+</script>
 {% endblock %}
