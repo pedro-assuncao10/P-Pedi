@@ -1,0 +1,309 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Logística e Entregas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logistica-header { margin-bottom: 30px; }
+    .logistica-header h2 { margin: 0; color: var(--admin-secondary, #2c3e50); }
+    .logistica-header p { color: #7f8c8d; margin-top: 5px; }
+
+    .logistica-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .painel-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .painel-card h3 { 
+        font-size: 1.2rem; 
+        border-bottom: 1px solid #eee; 
+        padding-bottom: 15px; 
+        margin-bottom: 20px; 
+        color: #34495e; 
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Formulários Embutidos */
+    .inline-form { display: flex; gap: 10px; margin-bottom: 20px; }
+    .form-control { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+    .btn-add { background: var(--primary-color, #E91E63); color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+    .btn-add:hover { filter: brightness(0.9); }
+
+    /* Listas */
+    .data-list { list-style: none; padding: 0; margin: 0; }
+    .data-item { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 15px 0; 
+        border-bottom: 1px dashed #eee; 
+    }
+    .data-item:last-child { border-bottom: none; }
+    
+    .item-info strong { display: block; color: #2c3e50; font-size: 1.05rem;}
+    .item-info small { color: #7f8c8d; font-size: 0.85rem; }
+    
+    .item-actions { display: flex; align-items: center; gap: 15px; }
+    .btn-delete { color: #e74c3c; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+    
+    /* Toggle Switch (Interruptor) */
+    .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #2ecc71; }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+    .status-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; }
+    .status-on { background: #e8f8f5; color: #27ae60; }
+    .status-off { background: #fdf2e9; color: #7f8c8d; }
+
+    /* === NOVOS ESTILOS: PAINEL DE ROTEIRIZAÇÃO AO VIVO === */
+    .active-fleet-section {
+        margin-top: 40px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .active-fleet-section h3 {
+        color: var(--admin-secondary, #2c3e50);
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .fleet-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    .fleet-card {
+        border: 1px solid var(--border-color, #E0E0E0);
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: var(--background-color, #F9F9F9);
+        display: flex;
+        flex-direction: column;
+    }
+    .fleet-card-header {
+        background-color: #fff;
+        padding: 15px;
+        border-bottom: 1px dashed var(--border-color, #eee);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .fleet-card-header h4 { margin: 0; font-size: 1.1rem; color: var(--text-color); display: flex; align-items: center; gap: 8px;}
+    .fleet-card-header h4 i { color: var(--primary-color); }
+    .route-status { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; background: #e3f2fd; color: #1976d2;}
+    
+    .fleet-card-body { padding: 15px; flex-grow: 1; }
+    .fleet-stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #555;}
+    .fleet-stat-row strong { color: #333; }
+    
+    .fleet-card-footer {
+        background-color: var(--primary-color, #E91E63);
+        color: #fff;
+        padding: 12px 15px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    @media(max-width: 900px) {
+        .logistica-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logistica-header">
+    <h2>Logística e Frota</h2>
+    <p>Gira as suas regiões de entrega e controle os motoboys disponíveis para os despachos.</p>
+</div>
+
+<div class="logistica-grid">
+    <!-- COLUNA 1: BAIRROS E TAXAS -->
+    <div class="painel-card">
+        <h3>
+            <span><i class='bx bx-map-pin'></i> Bairros e Taxas</span>
+            <span class="status-badge" style="background:#f1f2f6; color:#555;">{{ bairros.count }} Zonas</span>
+        </h3>
+        
+        <form method="POST" action="{% url 'logistica:adicionar_bairro' %}" class="inline-form">
+            {% csrf_token %}
+            {{ form_bairro.nome }}
+            {{ form_bairro.taxa }}
+            <button type="submit" class="btn-add"><i class='bx bx-plus'></i> Adicionar</button>
+        </form>
+
+        <ul class="data-list">
+            {% for bairro in bairros %}
+                <li class="data-item">
+                    <div class="item-info">
+                        <strong>{{ bairro.nome }}</strong>
+                        <small>Taxa de Entrega: R$ {{ bairro.taxa }}</small>
+                    </div>
+                    <div class="item-actions">
+                        <a href="{% url 'logistica:remover_bairro' bairro.id %}" class="btn-delete" title="Remover Bairro" onclick="return confirm('Tem certeza?');"><i class='bx bx-trash'></i></a>
+                    </div>
+                </li>
+            {% empty %}
+                <li style="text-align: center; color: #999; padding: 20px;">Nenhum bairro cadastrado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- COLUNA 2: MOTOBOYS -->
+    <div class="painel-card">
+        <h3>
+            <span><i class='bx bx-cycling'></i> Frota de Motoboys</span>
+            <span class="status-badge" style="background:#f1f2f6; color:#555;">{{ motoboys.count }} Estafetas</span>
+        </h3>
+
+        <form method="POST" action="{% url 'logistica:adicionar_motoboy' %}" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                {{ form_motoboy.nome }}
+                {{ form_motoboy.telefone }}
+            </div>
+            <div style="display: flex; gap: 10px;">
+                {{ form_motoboy.placa }}
+                {{ form_motoboy.taxa_fixa }} <!-- Adicionado o campo de taxa fixa -->
+                <button type="submit" class="btn-add" style="width: 100%;"><i class='bx bx-plus'></i> Cadastrar Motoboy</button>
+            </div>
+        </form>
+
+        <ul class="data-list">
+            {% for motoboy in motoboys %}
+                <li class="data-item">
+                    <div class="item-info">
+                        <strong>{{ motoboy.nome }}</strong>
+                        <small>Moto: {{ motoboy.placa|default:"N/A" }} • Tel: {{ motoboy.telefone|default:"-" }}</small>
+                        <div style="margin-top: 5px;">
+                            <span id="badge-motoboy-{{ motoboy.id }}" class="status-badge {% if motoboy.is_ativo_hoje %}status-on{% else %}status-off{% endif %}">
+                                {% if motoboy.is_ativo_hoje %}🟢 Trabalhando Hoje{% else %}⚫ Indisponível{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <!-- Interruptor mágico -->
+                        <label class="switch" title="Ligar/Desligar Motoboy">
+                            <input type="checkbox" class="toggle-motoboy" data-id="{{ motoboy.id }}" {% if motoboy.is_ativo_hoje %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+
+                        <a href="{% url 'logistica:remover_motoboy' motoboy.id %}" class="btn-delete" title="Excluir Motoboy" onclick="return confirm('Tem certeza?');"><i class='bx bx-trash'></i></a>
+                    </div>
+                </li>
+            {% empty %}
+                <li style="text-align: center; color: #999; padding: 20px;">Nenhum motoboy cadastrado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- ================= PAINEL DE ROTEIRIZAÇÃO AO VIVO ================= -->
+<div class="active-fleet-section">
+    <h3>
+        <span><i class='bx bx-radar' style="color: var(--primary-color);"></i> Painel de Roteirização do Dia</span>
+        <span class="status-badge status-on" style="font-size: 0.9rem;">{{ motoboys_ativos.count }} Em Operação</span>
+    </h3>
+    
+    <div class="fleet-grid">
+        {% for m in motoboys_ativos %}
+        <div class="fleet-card" id="card-motoboy-{{ m.id }}">
+            <div class="fleet-card-header">
+                <h4><i class='bx bxs-user-badge'></i> {{ m.nome }}</h4>
+                <!-- O status mudará na fase 2: "Aguardando", "Em Rota", etc -->
+                <span class="route-status">Aguardando Rota</span>
+            </div>
+            <div class="fleet-card-body">
+                <div class="fleet-stat-row">
+                    <span>Entregas hoje:</span>
+                    <strong>{{ m.entregas_hoje }} pedido(s)</strong>
+                </div>
+                <div class="fleet-stat-row">
+                    <span>Diária (Fixo):</span>
+                    <strong>R$ {{ m.taxa_fixa }}</strong>
+                </div>
+                <div class="fleet-stat-row">
+                    <span>Taxas Acumuladas:</span>
+                    <strong style="color: #27ae60;">+ R$ {{ m.ganho_entregas }}</strong>
+                </div>
+            </div>
+            <div class="fleet-card-footer">
+                Receber Hoje: R$ {{ m.total_receber }}
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #7f8c8d; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;">
+            <i class='bx bx-sleepy' style="font-size: 3rem; margin-bottom: 10px; color: #ccc;"></i>
+            <p>Nenhum motoboy foi ativado para o dia de hoje.<br>Ative-os no painel acima quando começarem o expediente.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggles = document.querySelectorAll('.toggle-motoboy');
+        
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const motoboyId = this.getAttribute('data-id');
+                const badge = document.getElementById(`badge-motoboy-${motoboyId}`);
+                
+                fetch(`/logistica/api/toggle-motoboy/${motoboyId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        if(data.is_ativo_hoje) {
+                            badge.className = 'status-badge status-on';
+                            badge.innerHTML = '🟢 Trabalhando Hoje';
+                        } else {
+                            badge.className = 'status-badge status-off';
+                            badge.innerHTML = '⚫ Indisponível';
+                        }
+                        
+                        // Recarrega a página levemente para atualizar o painel de baixo
+                        // (Na fase 2 faremos isso via WebSocket ou Reactivity)
+                        setTimeout(() => window.location.reload(), 300);
+                        
+                    } else {
+                        alert("Erro ao atualizar o status.");
+                        this.checked = !this.checked; // Reverte o botão se der erro
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    this.checked = !this.checked;
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

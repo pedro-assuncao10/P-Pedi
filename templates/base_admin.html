@@ -99,6 +99,14 @@
                 </a>
             </li>
 
+            <li>
+                <!-- Link para Logistica -->
+                <a href="{% url 'logistica:painel' %}" class="menu-link {% if request.resolver_match.url_name == 'Logistica e Frota' and request.resolver_match.app_name == 'Logistica e Frota' %}active{% endif %}">
+                    <i class='bx bx-package'></i>
+                    <span>Logística e Frota</span>
+                </a>
+            </li>
+
             <li class="menu-header">Catálogo</li>
             
             <li>

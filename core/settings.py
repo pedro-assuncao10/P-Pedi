@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'assinatura_indicacao',
     'customizacao',
     'financeiro',
+    'logistica',
 ]
 
 MIDDLEWARE = [

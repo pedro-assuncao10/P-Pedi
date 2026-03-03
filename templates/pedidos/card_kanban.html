@@ -21,7 +21,18 @@
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 8px;">
-        <span class="time-badge">{{ pedido.criado_em|date:"H:i" }}</span>
+        
+        <!-- MODIFICADO AQUI: Container Flex para alinhar horário e etiqueta do Motoboy -->
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="time-badge">{{ pedido.criado_em|date:"H:i" }}</span>
+            
+            <!-- NOVA ETIQUETA: Se o pedido já tiver um motoboy atribuído (Despacho), mostra o nome dele -->
+            {% if pedido.despacho_logistica %}
+                <span class="motoboy-badge" style="background-color: #e3f2fd; color: #1976d2; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;" title="Atribuído ao Motoboy">
+                    <i class='bx bx-cycling'></i> {{ pedido.despacho_logistica.rota.motoboy.nome }}
+                </span>
+            {% endif %}
+        </div>
         
         <div style="display: flex; gap: 10px; align-items: center;">
             <a href="{% url 'pedidos:imprimir_pedido' pedido.id %}" target="_blank" 

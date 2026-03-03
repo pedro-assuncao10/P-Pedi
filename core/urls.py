@@ -17,6 +17,7 @@ urlpatterns = [
     path('assinatura-indicacao/', include('assinatura_indicacao.urls', namespace='assinatura_indicacao')),
     path('customizacao/', include('customizacao.urls')),
     path('financeiro/', include('financeiro.urls')),
+    path('logistica/', include('logistica.urls')),
 ]
 
 # Configuração para servir arquivos de mídia em desenvolvimento
