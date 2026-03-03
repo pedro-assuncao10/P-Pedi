@@ -10,7 +10,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
 
     # Rotas de API para os modais
-    path('api/editar-dados/', api_views.EditarDadosAPIView.as_view(), name='api_editar_dados'),
     path('api/alterar-senha/', api_views.AlterarSenhaAPIView.as_view(), name='api_alterar_senha'),
     path('cadastro/', views.cadastro_view, name='cadastro'),
 ]

@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.db import transaction
+from decimal import Decimal
 
 from carrinho.cart import Cart
 from pedidos.models import Pedido, ItemPedido
 from clientes.models import Endereco
+from logistica.models import BairroEntrega # <-- Importa o modelo de bairros
 
 class ProcessarPedidoAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -36,14 +38,16 @@ class ProcessarPedidoAPIView(APIView):
             change_for = data.get('change_for') 
             if change_for == '': change_for = None
             
-            # A observação global foi removida da requisição do frontend
-            # --------------------------------
+            # --- NOVA LÓGICA: CAPTURA O BAIRRO E A TAXA ---
+            bairro_id = data.get('bairro_id')
+            bairro_obj = None
+            taxa_entrega = Decimal('0.00')
 
             data_agendamento_final = None
             if schedule_option == 'schedule' and scheduled_time:
                 data_agendamento_final = scheduled_time
             
-            # 3. Define o objeto Endereço
+            # 3. Define o objeto Endereço e Valida a Taxa
             endereco_obj = None
             endereco_display = "Retirada na Loja"
             
@@ -51,26 +55,43 @@ class ProcessarPedidoAPIView(APIView):
                  return Response({'success': False, 'error': 'Perfil de cliente não encontrado.'}, status=400)
 
             if delivery_option == 'delivery':
+                # Validação de Segurança: Obrigatório escolher um bairro
+                if not bairro_id:
+                    return Response({'success': False, 'error': 'Selecione uma Região de Entrega válida para calcular a taxa.'}, status=400)
+                
+                try:
+                    bairro_obj = BairroEntrega.objects.get(id=bairro_id)
+                    taxa_entrega = bairro_obj.taxa
+                except BairroEntrega.DoesNotExist:
+                    return Response({'success': False, 'error': 'A região de entrega selecionada é inválida.'}, status=400)
+
+                # Busca o endereço do cliente (apenas para GPS do motoboy)
                 endereco_obj = user.perfilcliente.enderecos.filter(is_principal=True).first()
                 if not endereco_obj:
                     endereco_obj = user.perfilcliente.enderecos.first()
                 
                 if endereco_obj:
-                    endereco_display = f"{endereco_obj.logradouro}, {endereco_obj.numero} - {endereco_obj.bairro}"
+                    endereco_display = f"{endereco_obj.logradouro}, {endereco_obj.numero} - {endereco_obj.bairro} ({endereco_obj.cidade})"
                 else:
-                    return Response({'success': False, 'error': 'Endereço de entrega não encontrado.'}, status=400)
+                    return Response({'success': False, 'error': 'Endereço de entrega não encontrado. Por favor, cadastre um endereço.'}, status=400)
             
             # 4. Criação do Pedido (Transação Atômica)
             with transaction.atomic():
-                total_pedido = cart.get_total_price()
+                # O total do pedido agora é: Valor das Pizzas + Taxa de Entrega do Bairro
+                total_produtos = cart.get_total_price()
+                total_pedido = total_produtos + taxa_entrega
                 
-                # Cria o pedido (Sem observação geral)
+                # Cria o pedido (Agora salvando a taxa e o bairro logístico)
                 pedido = Pedido.objects.create(
                     cliente=user.perfilcliente,
                     status='AGUARDANDO_PAGAMENTO',
                     metodo_pagamento=payment_method,
                     endereco_entrega=endereco_obj,
+                    
                     valor_total=total_pedido,
+                    valor_taxa_entrega=taxa_entrega,       # Salva a taxa congelada
+                    bairro_logistica=bairro_obj,           # Salva o vínculo para estatísticas
+                    
                     data_agendamento=data_agendamento_final,
                     bandeira_cartao=card_brand,
                     troco_para=change_for,
@@ -92,14 +113,18 @@ class ProcessarPedidoAPIView(APIView):
                         produto=produto,
                         quantidade=quantidade,
                         preco_unitario=preco,
-                        observacao=obs_item # Salva a observação específica do item no DB
+                        observacao=obs_item 
                     )
                     
-                    # Monta o texto bonitinho pro front-end (Step 3: Conclusão)
+                    # Monta o texto bonitinho pro front-end
                     texto_item = f"{quantidade}x {produto.nome}"
                     if obs_item:
                         texto_item += f" (Obs: {obs_item})"
                     itens_resumo.append(texto_item)
+
+                # Adiciona a taxa visualmente na tela de conclusão
+                if delivery_option == 'delivery' and taxa_entrega > 0:
+                    itens_resumo.append(f"Taxa de Entrega ({bairro_obj.nome}): R$ {taxa_entrega}")
 
                 cart.clear()
 
@@ -108,7 +133,7 @@ class ProcessarPedidoAPIView(APIView):
                 'success': True,
                 'pedido_id': pedido.id,
                 'total': total_pedido,
-                'metodo_pagamento': 'PIX' if payment_method == 'pix' else 'Cartão de Crédito',
+                'metodo_pagamento': 'PIX' if payment_method == 'pix' else payment_method.capitalize(),
                 'endereco': endereco_display,
                 'itens': itens_resumo
             })

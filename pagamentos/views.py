@@ -1,6 +1,7 @@
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from empresas.models import PerfilEmpresa
+from logistica.models import BairroEntrega # <-- IMPORTANTE: Importamos o modelo de bairros
 
 class CheckoutView(LoginRequiredMixin, TemplateView):
     template_name = 'checkout.html' 
@@ -29,7 +30,11 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         # --- LÓGICA DE CUSTOMIZAÇÃO E CONFIGURAÇÃO ---
         empresa = PerfilEmpresa.objects.first()
         
-        # Forma segura de buscar a customização, igual à Home!
+        # Busca os bairros cadastrados na logística para o select de taxas
+        bairros_entrega = []
+        if empresa:
+            bairros_entrega = BairroEntrega.objects.filter(empresa=empresa).order_by('nome')
+        
         customizacao = None
         if empresa and hasattr(empresa, 'customizacao'):
             customizacao = empresa.customizacao
@@ -38,5 +43,8 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         context['configuracao'] = empresa 
         context['customizacao'] = customizacao
         context['loja_aberta'] = empresa.is_aberto if empresa else True
+        
+        # Envia a lista de bairros para o HTML
+        context['bairros_entrega'] = bairros_entrega
         
         return context

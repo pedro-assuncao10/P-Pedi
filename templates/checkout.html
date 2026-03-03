@@ -8,10 +8,10 @@
     <style>
         .hidden { display: none !important; }
         
-        /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--white-color, #fff); padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+        /* Modal Styles - CLASSES ÚNICAS (chk-) PARA NÃO DAR CONFLITO COM O HOME.CSS */
+        .chk-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 999999; }
+        .chk-modal-overlay.active { display: flex !important; }
+        .chk-modal-content { background: var(--white-color, #fff); padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         
         .modal-section-title { font-size: 1.1rem; font-weight: 600; color: var(--text-color, #333); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color, #eee); padding-bottom: 0.5rem; margin-top: 1rem; }
         .modal-section-title:first-child { margin-top: 0; }
@@ -263,7 +263,6 @@
 
                                 <div style="font-size: 1.1rem; margin-top: 1rem; border-top: 1px solid var(--border-color, #ddd); padding-top: 1rem; display: flex; justify-content: space-between;">
                                     <strong style="color: var(--text-color);">Total:</strong>
-                                    <!-- AQUI ESTAVA O PROBLEMA: --color-primary corrigido para --primary-color -->
                                     <strong style="color: var(--primary-color, #e91e63);" id="success-total">R$ 0,00</strong>
                                 </div>
                             </div>
@@ -280,15 +279,17 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO -->
-    <div class="modal-overlay" id="full-register-modal">
-        <div class="modal-content">
+    <!-- MODAL DE CADASTRO ATUALIZADO COM CLASSES chk-modal-overlay -->
+    <div class="chk-modal-overlay" id="full-register-modal">
+        <div class="chk-modal-content">
             <h3 style="color: var(--text-color);">Complete seu cadastro</h3>
             <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-light);">Para realizar a entrega, precisamos de alguns dados.</p>
             
             <form id="full-register-form">
                 {% csrf_token %}
                 
+                <input type="hidden" name="usuario_id" value="{{ request.user.id|default:'' }}">
+
                 {% if not perfil %}
                 <h4 class="modal-section-title">Dados Pessoais</h4>
                 <div class="form-group">
@@ -357,6 +358,7 @@
                 home: "{% url 'catalogo:home' %}"
             },
             user: {
+                id: "{{ request.user.id|default:'' }}",
                 dadosCompletos: "{{ dados_completos|yesno:'true,false' }}" === "true"
             },
             times: {
@@ -364,6 +366,13 @@
                 pickup: "{{ configuracao.tempo_medio_retirada|default:'30-40 min'|escapejs }}"
             }
         };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const modal = document.getElementById('full-register-modal');
+            if (modal) {
+                document.body.appendChild(modal);
+            }
+        });
     </script>
     <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}

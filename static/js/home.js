@@ -1,4 +1,40 @@
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- ADICIONADO: MÁSCARAS DE INPUT PARA CPF E DATA DE NASCIMENTO ---
+    const dataNascimentoInput = document.getElementById('id_data_nascimento');
+    if (dataNascimentoInput) {
+        dataNascimentoInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, ''); // Remove tudo que não é número
+            if (val.length > 8) val = val.substring(0, 8); // Limita a 8 dígitos numéricos
+            
+            // Aplica a formatação DD/MM/AAAA
+            if (val.length > 4) {
+                val = val.replace(/^(\d{2})(\d{2})(\d+)/, '$1/$2/$3');
+            } else if (val.length > 2) {
+                val = val.replace(/^(\d{2})(\d+)/, '$1/$2');
+            }
+            e.target.value = val;
+        });
+    }
+
+    const cpfInput = document.getElementById('id_cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 11) val = val.substring(0, 11);
+            
+            if (val.length > 9) {
+                val = val.replace(/^(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+            } else if (val.length > 6) {
+                val = val.replace(/^(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+            } else if (val.length > 3) {
+                val = val.replace(/^(\d{3})(\d+)/, '$1.$2');
+            }
+            e.target.value = val;
+        });
+    }
+
+
     // --- Lógica do menu de perfil ---
     const profileButton = document.getElementById('profile-menu-button');
     const profileMenu = document.getElementById('profile-dropdown-menu');
@@ -52,8 +88,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const changePasswordForm = document.getElementById('change-password-form');
 
     async function submitProfileForm(form, url) {
+        // Envia FormData nativo igual no checkout.js para garantir 100% de compatibilidade
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+        
         form.querySelectorAll('.form-error').forEach(el => {
             el.textContent = ''; el.style.display = 'none';
         });
@@ -62,22 +99,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    // Pega o token direto do formulário para maior segurança
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken') || getCookie('csrftoken'),
                 },
-                body: JSON.stringify(data),
+                body: formData, 
+                credentials: 'same-origin' // Mantém a sessão do Django
             });
+            
             const result = await response.json();
+            
             if (result.success) {
                 closeModal();
                 alert(result.message || 'Operação realizada com sucesso!');
                 if (result.reload) window.location.reload();
             } else if (result.errors) {
-                for (const field in result.errors) {
-                    const errorDiv = form.querySelector(`[name="${field}"]`)?.closest('.form-group').querySelector('.form-error');
-                    if (errorDiv) {
-                        errorDiv.textContent = result.errors[field][0];
-                        errorDiv.style.display = 'block';
+                // Se for um erro direto do banco de dados (Ex: CPF Duplicado)
+                if (typeof result.errors === 'string') {
+                    alert('Aviso do Sistema: ' + result.errors);
+                } else {
+                    // Se for erro de validação de formulário
+                    for (const field in result.errors) {
+                        const errorDiv = form.querySelector(`[name="${field}"]`)?.closest('.form-group').querySelector('.form-error');
+                        if (errorDiv) {
+                            errorDiv.textContent = result.errors[field][0];
+                            errorDiv.style.display = 'block';
+                        }
                     }
                 }
             } else {
@@ -85,20 +131,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Erro ao submeter o formulário:', error);
-            alert('Ocorreu um erro de conexão.');
+            alert('Ocorreu um erro de conexão. Tente novamente.');
         }
     }
 
     if (editProfileForm) {
         editProfileForm.addEventListener('submit', function(event) {
             event.preventDefault();
-            submitProfileForm(this, '/conta/api/editar-dados/');
+            // Substituído o link estático antigo pela rota oficial configurada no GLOBAL_CONFIG
+            const url = (typeof GLOBAL_CONFIG !== 'undefined') ? GLOBAL_CONFIG.urls.apiSalvarDados : '/clientes/api/salvar-dados-completos/';
+            submitProfileForm(this, url);
         });
     }
 
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', function(event) {
             event.preventDefault();
+            // Mantido igual pois é específico de senhas
             submitProfileForm(this, '/conta/api/alterar-senha/');
         });
     }

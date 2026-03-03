@@ -43,6 +43,22 @@ class Pedido(models.Model):
     
     valor_total = models.DecimalField(_('valor total'), max_digits=10, decimal_places=2)
 
+    # --- NOVOS CAMPOS PARA LOGÍSTICA E TAXA DE ENTREGA ---
+    valor_taxa_entrega = models.DecimalField(
+        _('taxa de entrega cobrada'),
+        max_digits=6, 
+        decimal_places=2, 
+        default=0.00
+    )
+    bairro_logistica = models.ForeignKey(
+        'logistica.BairroEntrega', 
+        on_delete=models.SET_NULL,
+        null=True, 
+        blank=True, 
+        verbose_name=_('região de logística')
+    )
+    # -----------------------------------------------------
+
     metodo_pagamento = models.CharField(
         _('método de pagamento'),
         max_length=20,
@@ -65,8 +81,6 @@ class Pedido(models.Model):
         blank=True,
         help_text="Qual a bandeira do cartão para levar a maquininha correta."
     )
-    
-    # OBSERVAÇÃO GERAL REMOVIDA DAQUI
     
     status = models.CharField(
         _('status'),

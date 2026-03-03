@@ -87,7 +87,7 @@
 
     <div class="modal-overlay" id="modal-overlay"></div>
 
-    <div class="modal" id="edit-profile-modal">
+    <div class="modal" id="edit-profile-modal" style="max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
             <button class="modal-close-btn">&times;</button>
             <h3>Complete seus dados</h3>
@@ -103,12 +103,14 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="id_cpf">CPF ou CNPJ</label>
-                        <input type="text" name="cpf" id="id_cpf" value="{{ user.perfilcliente.cpf|default:'' }}">
+                        <!-- Adicionado maxlength="14" para travar junto com a máscara -->
+                        <input type="text" name="cpf" id="id_cpf" value="{{ user.perfilcliente.cpf|default:'' }}" maxlength="14">
                         <div class="form-error"></div>
                     </div>
                     <div class="form-group">
                         <label for="id_data_nascimento">Data de nascimento</label>
-                        <input type="text" name="data_nascimento" id="id_data_nascimento" placeholder="dd/mm/aaaa" value="{{ user.perfilcliente.data_nascimento|date:'d/m/Y'|default:'' }}">
+                        <!-- Adicionado maxlength="10" para travar junto com a máscara -->
+                        <input type="text" name="data_nascimento" id="id_data_nascimento" placeholder="dd/mm/aaaa" value="{{ user.perfilcliente.data_nascimento|date:'d/m/Y'|default:'' }}" maxlength="10">
                         <div class="form-error"></div>
                     </div>
                 </div>
@@ -122,6 +124,11 @@
                     <input type="email" name="email" id="id_email" value="{{ user.email|default:'' }}" readonly disabled>
                      <small>O e-mail não pode ser alterado.</small>
                 </div>
+
+                <!-- ADICIONADO: Expansão dos campos de Endereço para combinar com a nova API -->
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+                <h4 style="font-size: 1.1rem; text-align: left; margin-bottom: 16px;">Endereço de Entrega</h4>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="id_cep">CEP</label>
@@ -129,12 +136,40 @@
                         <div class="form-error"></div>
                     </div>
                     <div class="form-group">
-                        <label for="id_endereco">Endereço</label>
-                        <input type="text" name="endereco" id="id_endereco" placeholder="Rua e número" value="{{ user.perfilcliente.enderecos.first.logradouro|default:'' }}">
+                        <label for="id_estado">Estado (UF)</label>
+                        <input type="text" name="estado" id="id_estado" maxlength="2" value="{{ user.perfilcliente.enderecos.first.estado|default:'' }}" style="text-transform: uppercase;">
                         <div class="form-error"></div>
                     </div>
                 </div>
-                <button type="submit" class="btn primary">Continuar</button>
+                <div class="form-group">
+                    <label for="id_logradouro">Logradouro</label>
+                    <input type="text" name="logradouro" id="id_logradouro" value="{{ user.perfilcliente.enderecos.first.logradouro|default:'' }}">
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_numero">Número</label>
+                        <input type="text" name="numero" id="id_numero" value="{{ user.perfilcliente.enderecos.first.numero|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_bairro">Bairro</label>
+                        <input type="text" name="bairro" id="id_bairro" value="{{ user.perfilcliente.enderecos.first.bairro|default:'' }}">
+                        <div class="form-error"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_cidade">Cidade</label>
+                    <input type="text" name="cidade" id="id_cidade" value="{{ user.perfilcliente.enderecos.first.cidade|default:'' }}">
+                    <div class="form-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="id_complemento">Complemento (Opcional)</label>
+                    <input type="text" name="complemento" id="id_complemento" value="{{ user.perfilcliente.enderecos.first.complemento|default:'' }}">
+                    <div class="form-error"></div>
+                </div>
+
+                <button type="submit" class="btn primary">Salvar Dados</button>
             </form>
         </div>
     </div>
@@ -168,6 +203,14 @@
         </div>
     </div>
 
+    <!-- ADICIONADO: Variáveis globais para o JS do Base (home.js) consumir URLs do Django -->
+    <script>
+        const GLOBAL_CONFIG = {
+            urls: {
+                apiSalvarDados: "{% url 'clientes:api_salvar_dados_completos' %}"
+            }
+        };
+    </script>
     <script src="{% static 'js/home.js' %}"></script>
     {% block scripts %}{% endblock %}
 </body>
