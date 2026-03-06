@@ -110,3 +110,5 @@ LOGIN_REDIRECT_URL = 'catalogo:home'
 
 # Para onde o usuário vai depois de fazer logout
 LOGOUT_REDIRECT_URL = 'catalogo:home'
+
+MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN', '')

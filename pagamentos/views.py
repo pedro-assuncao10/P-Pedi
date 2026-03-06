@@ -2,6 +2,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from empresas.models import PerfilEmpresa
 from logistica.models import BairroEntrega # <-- IMPORTANTE: Importamos o modelo de bairros
+from django.conf import settings
 
 class CheckoutView(LoginRequiredMixin, TemplateView):
     template_name = 'checkout.html' 
@@ -46,5 +47,8 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         
         # Envia a lista de bairros para o HTML
         context['bairros_entrega'] = bairros_entrega
+
+        context['mapbox_token'] = settings.MAPBOX_TOKEN
+        print("MAPBOX_TOKEN no checkout:", settings.MAPBOX_TOKEN)  # Debug para verificar o token
         
         return context
