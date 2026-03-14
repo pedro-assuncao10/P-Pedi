@@ -168,50 +168,52 @@
         </ul>
     </div>
 
-    <!-- COLUNA 2: MOTOBOYS -->
+    <!-- COLUNA 2: MOTOBOYS (AGORA LÊ DE 'entregadores' e 'form_entregador') -->
     <div class="painel-card">
         <h3>
-            <span><i class='bx bx-cycling'></i> Frota de Motoboys</span>
-            <span class="status-badge" style="background:#f1f2f6; color:#555;">{{ motoboys.count }} Estafetas</span>
+            <span><i class='bx bx-cycling'></i> Frota de Entregadores</span>
+            <span class="status-badge" style="background:#f1f2f6; color:#555;">{{ entregadores.count }} Estafetas</span>
         </h3>
 
         <form method="POST" action="{% url 'logistica:adicionar_motoboy' %}" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                {{ form_motoboy.nome }}
-                {{ form_motoboy.telefone }}
+            <!-- AQUI: Foram adicionadas 3 colunas para caber o CPF também -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                {{ form_entregador.nome }}
+                {{ form_entregador.cpf }}
+                {{ form_entregador.telefone }}
             </div>
             <div style="display: flex; gap: 10px;">
-                {{ form_motoboy.placa }}
-                {{ form_motoboy.taxa_fixa }} <!-- Adicionado o campo de taxa fixa -->
-                <button type="submit" class="btn-add" style="width: 100%;"><i class='bx bx-plus'></i> Cadastrar Motoboy</button>
+                {{ form_entregador.placa }}
+                {{ form_entregador.taxa_fixa }} 
+                <button type="submit" class="btn-add" style="width: 100%;"><i class='bx bx-plus'></i> Cadastrar Entregador</button>
             </div>
         </form>
 
         <ul class="data-list">
-            {% for motoboy in motoboys %}
+            {% for entregador in entregadores %}
                 <li class="data-item">
                     <div class="item-info">
-                        <strong>{{ motoboy.nome }}</strong>
-                        <small>Moto: {{ motoboy.placa|default:"N/A" }} • Tel: {{ motoboy.telefone|default:"-" }}</small>
+                        <strong>{{ entregador.nome }}</strong>
+                        <small>CPF: {{ entregador.cpf }} • Moto: {{ entregador.placa|default:"N/A" }} • Tel: {{ entregador.telefone|default:"-" }}</small>
                         <div style="margin-top: 5px;">
-                            <span id="badge-motoboy-{{ motoboy.id }}" class="status-badge {% if motoboy.is_ativo_hoje %}status-on{% else %}status-off{% endif %}">
-                                {% if motoboy.is_ativo_hoje %}🟢 Trabalhando Hoje{% else %}⚫ Indisponível{% endif %}
+                            <span id="badge-entregador-{{ entregador.id }}" class="status-badge {% if entregador.is_ativo_hoje %}status-on{% else %}status-off{% endif %}">
+                                {% if entregador.is_ativo_hoje %}🟢 Trabalhando Hoje{% else %}⚫ Indisponível{% endif %}
                             </span>
                         </div>
                     </div>
                     <div class="item-actions">
                         <!-- Interruptor mágico -->
                         <label class="switch" title="Ligar/Desligar Motoboy">
-                            <input type="checkbox" class="toggle-motoboy" data-id="{{ motoboy.id }}" {% if motoboy.is_ativo_hoje %}checked{% endif %}>
+                            <input type="checkbox" class="toggle-entregador" data-id="{{ entregador.id }}" {% if entregador.is_ativo_hoje %}checked{% endif %}>
                             <span class="slider"></span>
                         </label>
 
-                        <a href="{% url 'logistica:remover_motoboy' motoboy.id %}" class="btn-delete" title="Excluir Motoboy" onclick="return confirm('Tem certeza?');"><i class='bx bx-trash'></i></a>
+                        <a href="{% url 'logistica:remover_motoboy' entregador.id %}" class="btn-delete" title="Excluir Entregador" onclick="return confirm('Tem certeza?');"><i class='bx bx-trash'></i></a>
                     </div>
                 </li>
             {% empty %}
-                <li style="text-align: center; color: #999; padding: 20px;">Nenhum motoboy cadastrado.</li>
+                <li style="text-align: center; color: #999; padding: 20px;">Nenhum entregador cadastrado.</li>
             {% endfor %}
         </ul>
     </div>
@@ -221,12 +223,12 @@
 <div class="active-fleet-section">
     <h3>
         <span><i class='bx bx-radar' style="color: var(--primary-color);"></i> Painel de Roteirização do Dia</span>
-        <span class="status-badge status-on" style="font-size: 0.9rem;">{{ motoboys_ativos.count }} Em Operação</span>
+        <span class="status-badge status-on" style="font-size: 0.9rem;">{{ entregadores_ativos.count }} Em Operação</span>
     </h3>
     
     <div class="fleet-grid">
-        {% for m in motoboys_ativos %}
-        <div class="fleet-card" id="card-motoboy-{{ m.id }}">
+        {% for m in entregadores_ativos %}
+        <div class="fleet-card" id="card-entregador-{{ m.id }}">
             <div class="fleet-card-header">
                 <h4><i class='bx bxs-user-badge'></i> {{ m.nome }}</h4>
                 <!-- O status mudará na fase 2: "Aguardando", "Em Rota", etc -->
@@ -253,7 +255,7 @@
         {% empty %}
         <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #7f8c8d; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;">
             <i class='bx bx-sleepy' style="font-size: 3rem; margin-bottom: 10px; color: #ccc;"></i>
-            <p>Nenhum motoboy foi ativado para o dia de hoje.<br>Ative-os no painel acima quando começarem o expediente.</p>
+            <p>Nenhum entregador foi ativado para o dia de hoje.<br>Ative-os no painel acima quando começarem o expediente.</p>
         </div>
         {% endfor %}
     </div>
@@ -264,14 +266,15 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const toggles = document.querySelectorAll('.toggle-motoboy');
+        const toggles = document.querySelectorAll('.toggle-entregador');
         
         toggles.forEach(toggle => {
             toggle.addEventListener('change', function() {
-                const motoboyId = this.getAttribute('data-id');
-                const badge = document.getElementById(`badge-motoboy-${motoboyId}`);
+                const entregadorId = this.getAttribute('data-id');
+                const badge = document.getElementById(`badge-entregador-${entregadorId}`);
                 
-                fetch(`/logistica/api/toggle-motoboy/${motoboyId}/`, {
+                // URL atualizada para apontar pro backend correto
+                fetch(`/logistica/api/toggle-entregador/${entregadorId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': '{{ csrf_token }}',
@@ -289,13 +292,11 @@
                             badge.innerHTML = '⚫ Indisponível';
                         }
                         
-                        // Recarrega a página levemente para atualizar o painel de baixo
-                        // (Na fase 2 faremos isso via WebSocket ou Reactivity)
                         setTimeout(() => window.location.reload(), 300);
                         
                     } else {
                         alert("Erro ao atualizar o status.");
-                        this.checked = !this.checked; // Reverte o botão se der erro
+                        this.checked = !this.checked; 
                     }
                 })
                 .catch(error => {

@@ -13,6 +13,38 @@ from logistica.models import BairroEntrega # <-- Importa o modelo de bairros
 class ProcessarPedidoAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def montandoEndereco(self, request, endereco_obj):
+        """ 
+        Função auxiliar responsável por formatar e blindar a string de endereço.
+        Funciona para qualquer cidade e estado, pegando os dados dinâmicos do banco.
+        """
+        if not endereco_obj:
+            return ""
+            
+        cidade = getattr(endereco_obj, 'cidade', '')
+        estado = getattr(endereco_obj, 'estado', '')
+        cep = getattr(endereco_obj, 'cep', '')
+
+        # Monta o endereço base: "Rua, Número"
+        endereco_display = f"{endereco_obj.logradouro}, {endereco_obj.numero}"
+        
+        # Adiciona complemento se existir
+        complemento = getattr(endereco_obj, 'complemento', '')
+        if complemento:
+            endereco_display += f" ({complemento})"
+        
+        # Adiciona Bairro
+        endereco_display += f" - {endereco_obj.bairro}"
+
+        # Adiciona Cidade e Estado APENAS se existirem no banco
+        if cidade and estado:
+            endereco_display += f", {cidade} - {estado}"
+        
+        if cep:
+            endereco_display += f", {cep}"
+            
+        return endereco_display
+
     def post(self, request):
         try:
             print("Iniciando processo de checkout...")
@@ -65,13 +97,12 @@ class ProcessarPedidoAPIView(APIView):
                 except BairroEntrega.DoesNotExist:
                     return Response({'success': False, 'error': 'A região de entrega selecionada é inválida.'}, status=400)
 
-                # Busca o endereço do cliente (apenas para GPS do motoboy)
-                endereco_obj = user.perfilcliente.enderecos.filter(is_principal=True).first()
-                if not endereco_obj:
-                    endereco_obj = user.perfilcliente.enderecos.first()
+                # Busca sempre o ÚLTIMO endereço cadastrado ou editado pelo cliente no Modal
+                endereco_obj = user.perfilcliente.enderecos.order_by('-id').first()
                 
                 if endereco_obj:
-                    endereco_display = f"{endereco_obj.logradouro}, {endereco_obj.numero} - {endereco_obj.bairro} ({endereco_obj.cidade})"
+                    # Chama a nova função passando o request e o objeto de endereço
+                    endereco_display = self.montandoEndereco(request, endereco_obj)
                 else:
                     return Response({'success': False, 'error': 'Endereço de entrega não encontrado. Por favor, cadastre um endereço.'}, status=400)
             

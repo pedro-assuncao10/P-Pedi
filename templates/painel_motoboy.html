@@ -1,0 +1,550 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#e91e63">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="manifest" href="/manifest.json">
+    <title>Painel do Entregador - Pápedi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+        :root {
+            --primary: #e91e63;
+            --success: #4CAF50;
+            --danger: #f44336;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-light: #777777;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        header { background-color: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; padding-top: env(safe-area-inset-top, 20px); }
+        .driver-info h1 { font-size: 1.2rem; font-weight: 600; }
+        .driver-info p { font-size: 0.85rem; opacity: 0.9; }
+        .status-toggle { display: flex; align-items: center; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+        .status-dot { width: 10px; height: 10px; background-color: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); animation: pulseGreen 2s infinite; }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
+
+        .view-section { display: none; flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 80px; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .idle-state { text-align: center; margin-top: 50px; color: var(--text-light); }
+        .radar-spinner { width: 60px; height: 60px; border: 4px solid #ddd; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .delivery-card { background-color: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 4px solid var(--primary); position: relative; overflow: hidden; }
+        .delivery-card.ringing { border-left-color: #ff9800; animation: shake 0.5s infinite alternate; }
+        @keyframes shake { from { transform: translateX(-2px); } to { transform: translateX(2px); } }
+        
+        .delivery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .route-id { font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+        .delivery-fee { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
+        .delivery-address { display: flex; align-items: flex-start; margin-bottom: 15px; }
+        .delivery-address svg { margin-right: 10px; color: var(--text-light); margin-top: 2px; flex-shrink: 0; }
+        .address-text h4 { font-size: 0.95rem; margin-bottom: 3px; }
+        .address-text p { font-size: 0.85rem; color: var(--text-light); }
+
+        .action-buttons { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 14px; border-radius: 8px; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: transparent; border: 2px solid var(--danger); color: var(--danger); }
+        .btn-full { width: 100%; }
+
+        #navigation-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; display: none; flex-direction: column; background: #000; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #map { flex: 1; width: 100%; }
+        .map-top-bar { position: absolute; top: env(safe-area-inset-top, 20px); left: 15px; right: 15px; z-index: 210; display: flex; justify-content: space-between; }
+        .btn-back-map { background: white; border: none; width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-main); }
+        .dist-badge { background: var(--primary); color: white; padding: 10px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 5px; }
+
+        .map-bottom-sheet { background: white; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 210; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+        .customer-card { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .customer-info-inner { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 45px; height: 45px; background: #eee; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 1.2rem; text-transform: uppercase;}
+        .c-name { font-weight: 600; font-size: 1.1rem; }
+        .c-details { font-size: 0.8rem; color: var(--text-light); }
+        .contact-btns { display: flex; gap: 10px; }
+        .btn-icon { width: 45px; height: 45px; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; text-decoration: none;}
+        .btn-whatsapp { background: #25D366; }
+        .btn-call { background: #2196F3; }
+        .dest-info { margin-bottom: 15px; }
+        .dest-info h3 { font-size: 0.9rem; color: var(--text-light); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dest-info p { font-size: 1rem; font-weight: 500; }
+        .dest-info .extra { color: #e65100; font-weight: 600; font-size: 0.9rem; margin-top: 5px; display: inline-block; background: #fff3e0; padding: 3px 8px; border-radius: 4px;}
+
+        .driver-marker { width: 30px; height: 30px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%232196F3" d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 384c-70.7 0-128-57.3-128-128s57.3-128 128-128 128 57.3 128 128-57.3 128-128 128z"/><circle fill="%23FFFFFF" cx="256" cy="256" r="80"/></svg>'); background-size: cover; border-radius: 50%; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .dest-marker { width: 40px; height: 40px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="%23e91e63" d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>'); background-size: cover; transform: translateY(-50%); }
+    </style>
+</head>
+<body>
+
+    <!-- Aviso de permissão (Some quando o entregador tocar na tela) -->
+    <div id="permission-banner" style="background: var(--text-main); color: white; text-align: center; padding: 10px; font-size: 0.85rem; z-index: 1000; position: relative;">
+        Toque em qualquer lugar para ativar o Alarme Sonoro e Notificações 🔔
+    </div>
+
+    <header>
+        <div class="driver-info">
+            <!-- A variável motoboy é passada pelo context do views.py -->
+            <h1>Olá, {{ motoboy.nome|default:"Entregador" }}!</h1>
+            <p id="ganhos-hoje">R$ 0,00 ganhos hoje</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="status-toggle">
+                <div class="status-dot"></div>
+                Online
+            </div>
+            <!-- Botão de logout -->
+            <a href="{% url 'logistica:logout_entregador' %}" style="color: white; text-decoration: none; padding: 5px;" title="Sair"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+        </div>
+    </header>
+
+    <!-- TELA 1: OCIOSO -->
+    <main id="view-idle" class="view-section active">
+        <div class="idle-state">
+            <div class="radar-spinner"></div>
+            <h3>Aguardando novos pedidos...</h3>
+            <p style="font-size: 0.85rem; margin-top: 10px;">Deixe a app aberta. O seu telemóvel irá tocar quando a loja lhe atribuir uma entrega.</p>
+        </div>
+    </main>
+
+    <!-- TELA 2: PEDIDO A TOCAR (Aguardando Aceitação) -->
+    <main id="view-ringing" class="view-section">
+        <h2 class="section-title" style="color: #ff9800;">Novo Pedido Disponível!</h2>
+        <div class="delivery-card ringing">
+            <div class="delivery-header">
+                <span class="route-id" id="ring-route-id">Pedido #---</span>
+                <span class="delivery-fee" id="ring-fee">R$ 0,00</span>
+            </div>
+            <div class="delivery-address">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <div class="address-text">
+                    <h4 id="ring-address">Buscando endereço...</h4>
+                    <p style="color: #e65100; font-weight: 500; margin-top: 4px;" id="ring-payment">Receber na entrega: ---</p>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-danger" onclick="recusarPedido()">Recusar</button>
+                <button class="btn btn-success" onclick="aceitarPedido()">Aceitar</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- TELA 3: PEDIDO ACEITE (Pronto para Rota) -->
+    <main id="view-accepted" class="view-section">
+        <h2 class="section-title">Entrega Atual</h2>
+        <div class="delivery-card">
+            <div class="delivery-header">
+                <span class="route-id" id="acc-route-id">Pedido #---</span>
+                <span class="delivery-fee" id="acc-fee">R$ 0,00</span>
+            </div>
+            <div class="delivery-address">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <div class="address-text">
+                    <h4 id="acc-address">Endereço da entrega</h4>
+                    <p style="color: #e65100; font-weight: 500; margin-top: 4px;" id="acc-payment">Receber na entrega: ---</p>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="btn-start-route" style="margin-top: 10px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                Iniciar Rota no GPS
+            </button>
+        </div>
+    </main>
+
+    <!-- TELA 4: MAPA EM TEMPO REAL (FULL SCREEN) -->
+    <div id="navigation-view">
+        <div class="map-top-bar">
+            <button class="btn-back-map" onclick="fecharMapa()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div class="dist-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span id="map-eta">Calculando...</span>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="map-bottom-sheet">
+            <div class="customer-card">
+                <div class="customer-info-inner">
+                    <div class="avatar" id="c-avatar-letter">C</div>
+                    <div>
+                        <div class="c-name" id="c-name">Nome do Cliente</div>
+                        <div class="c-details" id="c-details-sub">Aguardando info...</div>
+                    </div>
+                </div>
+                <div class="contact-btns">
+                    <a href="#" id="c-whatsapp" class="btn-icon btn-whatsapp" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+                    <a href="#" id="c-phone" class="btn-icon btn-call"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></a>
+                </div>
+            </div>
+
+            <div class="dest-info">
+                <h3>Endereço Final</h3>
+                <p id="c-address">Aguardando endereço...</p>
+                <span class="extra" id="c-payment-info">Cobrar: R$ 0,00</span>
+            </div>
+
+            <button id="btn-finalizar-entrega" class="btn btn-success btn-full" onclick="finalizarEntrega()">
+                Cheguei e Finalizei Entrega
+            </button>
+        </div>
+    </div>
+
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+    <script>
+        // ===============================================
+        // MÓDULO DE ALARMES E NOTIFICAÇÕES (ESTILO UBER)
+        // ===============================================
+        
+        // Substitua o .src por ' {% static 'audio/toque.mp3' %} ' se desejar usar um MP3 próprio da sua pasta static
+        const ringtone = new Audio('https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg');
+        ringtone.loop = true; // Força o áudio a repetir até o motoboy atender
+        let alarmeTocando = false;
+
+        function tocarAlarme() {
+            if (!alarmeTocando) {
+                ringtone.play().then(() => {
+                    alarmeTocando = true;
+                }).catch(err => {
+                    console.warn("Áudio bloqueado! O navegador exige interação prévia do usuário.", err);
+                });
+            }
+        }
+
+        function pararAlarme() {
+            ringtone.pause();
+            ringtone.currentTime = 0;
+            alarmeTocando = false;
+        }
+
+        function enviarNotificacaoPush(titulo, corpo) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                const notificacao = new Notification(titulo, {
+                    body: corpo,
+                    icon: "https://cdn-icons-png.flaticon.com/512/2830/2830305.png", // Ícone de moto
+                    vibrate: [200, 100, 200, 100, 500],
+                    requireInteraction: true // A notificação fica presa até ele clicar nela
+                });
+
+                notificacao.onclick = function() {
+                    window.focus(); // Se ele estiver no WhatsApp e clicar na noti, o navegador abre
+                    this.close();
+                };
+            }
+        }
+
+        // DESBLOQUEIO DE PERMISSÕES OBRIGATÓRIO
+        // Navegadores modernos barram som e notificação sem um toque inicial do usuário.
+        document.body.addEventListener('click', function initPermissions() {
+            // Esconde o aviso amarelo do topo
+            document.getElementById('permission-banner').style.display = 'none';
+
+            // Pede notificação se ainda não tem
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+
+            // Toca e pausa instantaneamente apenas para dizer ao celular: "O usuário destravou o áudio"
+            ringtone.play().then(() => {
+                ringtone.pause();
+                ringtone.currentTime = 0;
+            }).catch(() => {});
+            
+            document.body.removeEventListener('click', initPermissions);
+        }, { once: true });
+
+
+        // TOKEN do Mapbox
+        mapboxgl.accessToken = "{{ mapbox_token|default:'' }}"; 
+
+        let map = null;
+        let driverMarker = null;
+        let destMarker = null;
+        let watchId = null;
+        let currentRotaId = null;
+        let entregaAtualData = null;
+
+        // Controle Visual das Abas
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        // ===============================================
+        // MOTOR DE SINCRONIZAÇÃO (API POLLING)
+        // ===============================================
+        async function syncBackend() {
+            try {
+                const response = await fetch(`/logistica/api/entregador/sync/`);
+                
+                if (response.status === 401) {
+                    window.location.href = '/logistica/entregador/login/';
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById('ganhos-hoje').innerText = `R$ ${data.ganhos_hoje.toFixed(2).replace('.', ',')} ganhos hoje`;
+
+                // TELA: OCIOSO
+                if (data.status_tela === 'IDLE') {
+                    currentRotaId = null;
+                    entregaAtualData = null;
+                    if (document.getElementById('navigation-view').style.display !== 'flex') {
+                        switchView('view-idle');
+                    }
+                    
+                // TELA: TOCANDO (Novo Pedido) - ATUALIZADO PARA DISPARAR SOM E NOTIFICAÇÃO
+                } else if (data.status_tela === 'RINGING') {
+                    if (currentRotaId !== data.entrega.rota_id) {
+                        currentRotaId = data.entrega.rota_id;
+                        entregaAtualData = data.entrega;
+                        
+                        document.getElementById('ring-route-id').innerText = `Pedido #${data.entrega.pedido_id}`;
+                        document.getElementById('ring-fee').innerText = `R$ ${data.entrega.taxa.toFixed(2).replace('.', ',')}`;
+                        document.getElementById('ring-address').innerText = data.entrega.endereco_formatado;
+                        document.getElementById('ring-payment').innerText = `Receber: ${data.entrega.pagamento}`;
+                        
+                        switchView('view-ringing');
+
+                        // Dispara o Combo de Alerta (Vibração + Som + Notificação do Celular)
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+                        tocarAlarme();
+                        enviarNotificacaoPush("🔔 Nova Entrega Disponível!", `Pedido #${data.entrega.pedido_id} - Destino: ${data.entrega.endereco_formatado.split(' - ')[0]}`);
+                    }
+                    
+                // TELA: EM ANDAMENTO (Aceite)
+                } else if (data.status_tela === 'ACCEPTED') {
+                    currentRotaId = data.entrega.rota_id;
+                    entregaAtualData = data.entrega;
+                    
+                    document.getElementById('acc-route-id').innerText = `Pedido #${data.entrega.pedido_id}`;
+                    document.getElementById('acc-fee').innerText = `R$ ${data.entrega.taxa.toFixed(2).replace('.', ',')}`;
+                    document.getElementById('acc-address').innerText = data.entrega.endereco_formatado;
+                    document.getElementById('acc-payment').innerText = `Receber: ${data.entrega.pagamento}`;
+                    
+                    if (document.getElementById('navigation-view').style.display !== 'flex') {
+                        switchView('view-accepted');
+                    }
+                }
+
+            } catch (error) {
+                console.error("Erro na sincronização da rota:", error);
+            }
+        }
+
+        setInterval(syncBackend, 4000);
+        setTimeout(syncBackend, 500);
+
+        // ===============================================
+        // ACÇÕES DE BD (ACEITAR/RECUSAR/FINALIZAR)
+        // ===============================================
+        async function enviarAcaoParaBackend(action) {
+            if (!currentRotaId) return;
+            
+            try {
+                await fetch('/logistica/api/entregador/action/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, rota_id: currentRotaId })
+                });
+                syncBackend();
+            } catch (err) {
+                alert("Erro ao comunicar com o servidor. Verifique a internet.");
+            }
+        }
+
+        // Para a sirene automaticamente ao Aceitar ou Recusar
+        function aceitarPedido() {
+            pararAlarme();
+            switchView('view-accepted');
+            enviarAcaoParaBackend('ACCEPT');
+        }
+
+        function recusarPedido() {
+            pararAlarme();
+            switchView('view-idle');
+            enviarAcaoParaBackend('REJECT');
+        }
+
+        function finalizarEntrega() {
+            const btnFinalizar = document.getElementById('btn-finalizar-entrega');
+            btnFinalizar.innerText = "Finalizando...";
+            btnFinalizar.disabled = true;
+
+            fecharMapa();
+            
+            enviarAcaoParaBackend('FINISH').then(() => {
+                alert("✅ Entrega finalizada com sucesso!");
+                btnFinalizar.innerText = "Cheguei e Finalizei Entrega";
+                btnFinalizar.disabled = false;
+                switchView('view-idle');
+            });
+        }
+
+        // ===============================================
+        // MÁGICA DO MAPA E GPS (MAPBOX)
+        // ===============================================
+        document.getElementById('btn-start-route').addEventListener('click', async () => {
+            if (!entregaAtualData) return;
+            
+            document.getElementById('c-address').innerText = entregaAtualData.endereco_formatado;
+            document.getElementById('c-name').innerText = entregaAtualData.cliente_nome;
+            document.getElementById('c-avatar-letter').innerText = entregaAtualData.cliente_nome.charAt(0).toUpperCase();
+            document.getElementById('c-payment-info').innerText = entregaAtualData.pagamento;
+            document.getElementById('c-details-sub').innerText = `Pedido #${entregaAtualData.pedido_id}`;
+            
+            const wppNum = (entregaAtualData.cliente_telefone || "").replace(/\D/g, '');
+            document.getElementById('c-whatsapp').href = `https://wa.me/55${wppNum}`;
+            document.getElementById('c-phone').href = `tel:${wppNum}`;
+
+            document.getElementById('navigation-view').style.display = 'flex';
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async pos => {
+                    const startCoord = [pos.coords.longitude, pos.coords.latitude];
+                    
+                    let targetLng = parseFloat(String(entregaAtualData.longitude).replace(',', '.'));
+                    let targetLat = parseFloat(String(entregaAtualData.latitude).replace(',', '.'));
+
+                    if (isNaN(targetLng) || isNaN(targetLat) || targetLng === 0 || targetLat === 0) {
+                        document.getElementById('map-eta').innerText = "Buscando...";
+                        
+                        const enderecoBusca = entregaAtualData.endereco_formatado;
+                        const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(enderecoBusca)}.json?access_token=${mapboxgl.accessToken}&country=br&proximity=${startCoord[0]},${startCoord[1]}`;
+                        
+                        try {
+                            const res = await fetch(geocodeUrl);
+                            const gData = await res.json();
+                            if(gData.features && gData.features.length > 0) {
+                                targetLng = gData.features[0].center[0];
+                                targetLat = gData.features[0].center[1];
+                            } else {
+                                alert("Não foi possível localizar este endereço no mapa. Use o Waze ou Google Maps externo.");
+                                fecharMapa();
+                                return;
+                            }
+                        } catch(e) {
+                            alert("Erro ao buscar endereço no Mapbox."); 
+                            fecharMapa();
+                            return;
+                        }
+                    }
+
+                    carregarMapbox(startCoord, [targetLng, targetLat]);
+                    iniciarRastreamentoGPS();
+
+                }, err => {
+                    alert("Por favor, ative a localização do celular (GPS) para usar a navegação da app.");
+                    fecharMapa();
+                }, { enableHighAccuracy: true });
+            } else {
+                alert("Seu celular não suporta GPS.");
+                fecharMapa();
+            }
+        });
+
+        function carregarMapbox(start, end) {
+            if (map) {
+                driverMarker.setLngLat(start);
+                destMarker.setLngLat(end);
+                obterRotaDaAPI(start, end);
+                setTimeout(() => map.resize(), 300);
+                return;
+            }
+
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/navigation-day-v1',
+                center: start,
+                zoom: 16,
+                pitch: 45
+            });
+
+            const elDest = document.createElement('div');
+            elDest.className = 'dest-marker';
+            destMarker = new mapboxgl.Marker(elDest).setLngLat(end).addTo(map);
+
+            const elDriver = document.createElement('div');
+            elDriver.className = 'driver-marker';
+            driverMarker = new mapboxgl.Marker(elDriver).setLngLat(start).addTo(map);
+
+            map.on('load', () => {
+                map.resize();
+                obterRotaDaAPI(start, end);
+            });
+        }
+
+        async function obterRotaDaAPI(start, end) {
+            if (!mapboxgl.accessToken || mapboxgl.accessToken.includes('SEU_MAPBOX')) {
+                document.getElementById('map-eta').innerText = "Sem Token";
+                return;
+            }
+
+            const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0].geometry.coordinates;
+                    const durationStr = Math.round(data.routes[0].duration / 60) + " min";
+                    document.getElementById('map-eta').innerText = durationStr;
+
+                    const geojson = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: route } };
+
+                    if (map.getSource('route')) {
+                        map.getSource('route').setData(geojson);
+                    } else {
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: { type: 'geojson', data: geojson },
+                            layout: { 'line-join': 'round', 'line-cap': 'round' },
+                            paint: { 'line-color': '#3887be', 'line-width': 6, 'line-opacity': 0.8 }
+                        });
+                    }
+
+                    const bounds = new mapboxgl.LngLatBounds(start, start);
+                    bounds.extend(end);
+                    map.fitBounds(bounds, { padding: 80, maxZoom: 18 });
+                }
+            } catch (error) {
+                console.error("Erro ao desenhar linha", error);
+            }
+        }
+
+        function iniciarRastreamentoGPS() {
+            watchId = navigator.geolocation.watchPosition(pos => {
+                const newCoord = [pos.coords.longitude, pos.coords.latitude];
+                if(driverMarker) driverMarker.setLngLat(newCoord);
+            }, err => console.log(err), { enableHighAccuracy: true, maximumAge: 10000 });
+        }
+
+        function fecharMapa() {
+            document.getElementById('navigation-view').style.display = 'none';
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+    </script>
+</body>
+</html>

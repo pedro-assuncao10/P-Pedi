@@ -55,6 +55,10 @@ class Endereco(models.Model):
     cep = models.CharField(_('CEP'), max_length=9)
     is_principal = models.BooleanField(_('endereço principal'), default=False)
 
+    # NOVOS CAMPOS: Para salvar as coordenadas do Mapbox e não perder o motoboy
+    latitude = models.CharField(_('latitude'), max_length=50, null=True, blank=True)
+    longitude = models.CharField(_('longitude'), max_length=50, null=True, blank=True)
+
     class Meta:
         verbose_name = _('Endereço')
         verbose_name_plural = _('Endereços')

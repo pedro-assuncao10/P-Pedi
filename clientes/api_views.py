@@ -77,6 +77,8 @@ class SalvarDadosCompletosAPIView(APIView):
                             'cidade': data.get('cidade'),
                             'estado': data.get('estado'),
                             'complemento': data.get('complemento', ''),
+                            'latitude': data.get('latitude', ''),  # SALVA LATITUDE
+                            'longitude': data.get('longitude', ''), # SALVA LONGITUDE
                             'is_principal': True
                         }
                     )
@@ -87,6 +89,8 @@ class SalvarDadosCompletosAPIView(APIView):
                         endereco.cidade = data.get('cidade')
                         endereco.estado = data.get('estado')
                         endereco.complemento = data.get('complemento', '')
+                        endereco.latitude = data.get('latitude', '')  # ATUALIZA LATITUDE
+                        endereco.longitude = data.get('longitude', '') # ATUALIZA LONGITUDE
                         endereco.is_principal = True
                         endereco.save()
                 
